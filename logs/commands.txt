@@ -1,0 +1,1 @@
+command="/bolo" by=81891406 name="Mock" username="mockthebear" at="" chatid=81891406
