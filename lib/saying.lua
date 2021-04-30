@@ -18,7 +18,7 @@ metaSay.__call  = function( myself, text, format, disable_web_page_preview, disa
                 end
             end
         until ret
-        return ret     
+        return includeUpdate(ret)      
     end
     return false
 end
@@ -188,7 +188,7 @@ metaReply.__call  = function( myself, ... )
                     end
                 end
             until ret
-            return ret 
+            return includeUpdate(ret)  
         else
             local ret = nil 
             repeat
@@ -205,13 +205,41 @@ metaReply.__call  = function( myself, ... )
                     print("Failed to send rep", tostring(ret))
                 end
             until ret
-            return ret 
+            return includeUpdate(ret) 
         end 
         
     end
 end
 
+function includeUpdate(msg)
+    if msg then 
+        msg.update = {}
+        local metaUpdate = {}
+        setmetatable( msg.update , metaUpdate )
+        metaUpdate.__index = function(  )
+            return nil
+        end
+        metaUpdate.__call  = function( myself, imsg, text, parse, web, markup )
+            updateMessage(imsg, text, parse, web, markup )
+        end
 
+        local metaReply = {}
+        setmetatable( msg.update , metaReply )
+        metaReply.__index = function(  )
+            return nil
+        end
+
+        metaReply.__call  = function( myself, imsg, text, parse, disable_web_page_preview, disable_notification, reply_markup )
+            bot.sendMessage(msg.result.chat.id ,text, parse,disable_web_page_preview,disable_notification, msg.result.message_id, reply_markup)
+        end
+
+    end
+    return msg
+end
+
+function updateMessage(msg, text, parse, web, markup )
+    bot.editMessageText(msg.result.chat.id, msg.result.message_id, nil, text, parse, web, markup)
+end
 
 
 

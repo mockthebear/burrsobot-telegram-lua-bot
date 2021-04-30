@@ -312,28 +312,6 @@ function choose( ... )
     return arg[math.random(1,#arg)]
 end
 
-function SaveConfigs()
-	for name, val in pairs(configs) do 
-		saveConfig(name)
-	end
-end
-
-function SaveConfig(name)
-	if configs[name] and not configs[name].delete then
-		local data = serialize(configs[name])
-		local ret = db.getResult("SELECT * FROM `config` WHERE `name` = '"..db.escapeString(name).."';")
-		if ret:getID() ~= -1 and ret:getID() ~= nil then
-			ret:free()
-			db.executeQuery("UPDATE `config` SET `value` = '"..db.escapeString(data).."' WHERE `name` = '"..db.escapeString(name).."';");
-		else 
-			db.executeQuery("INSERT INTO `config` (`name`, `value`) VALUES ('"..db.escapeString(name).."', '"..db.escapeString(data).."')");
-		end
-	else 
-		configs[name] = nil
-		db.executeQuery("DELETE FROM `config` WHERE `name` = '"..db.escapeString(name).."';")
-	end
-end
-
 function Dump(T, l, str, supress)
     local ret = ""
     l = l or 1
@@ -367,7 +345,7 @@ function parseMessageDataToStr(msg)
     end
 
     if msg.chat then 
-        str = str .. 'On chat <b>'..msg.chat.id..'</b> - '..msg.chat.title..'\n'
+        str = str .. 'On chat <b>'..msg.chat.id..'</b> - '..(msg.chat.type == "private" and "private" or msg.chat.title)..'\n'
     end
 
     if msg.text then 
@@ -612,12 +590,19 @@ function MatchFind(par, ...)
 end
 
 
+function repeatEvent(time, func, times,...)
+    local ev = scheduleEvent(time, func,...)
+    ev.rep = times 
+    return ev
+end
+
 function scheduleEvent(time, func,...)
     if not sid then 
         sid = 1
     end
-    schedule[sid] = {time=time + os.time(),f=func,args={...},mode=g_bot}
     sid = sid +1
+    schedule[sid] = {time=time + os.time(),f=func,args={...},duration = time,rep=0}
+    return sid
 end
 
 function stopEvent(id)
@@ -631,20 +616,27 @@ function setEventDuration(id, time)
     local b = schedule[id]
     if b then
         b.time = os.time() + time
+        b.duration = time
     end
 end
-
-
 
 function triggerEvent(id)
     local b = schedule[id]
     if b then
-        local ret, err = pcall(b.f,unpack(b.args))
+        local ret, err =  xpcall(b.f, debug.traceback, unpack(b.args))
         if not ret then 
-            g_chatid = 81891406
-            say("Timer err on bot "..b.mode..":"..err)
+            say.admin("Error during on timer at: "..err)
+            schedule[id] = nil
+            return 
         end
-        schedule[id] = nil
+        if b.rep > 0 then 
+            b.time = os.time() + b.duration
+            b.rep = b.rep -1
+        else
+            schedule[id] = nil
+        end
+    else 
+        error("Unknown event: "..id.." - "..type(id))
     end
 end
 
@@ -689,14 +681,27 @@ function string:exploder(sep, limit)
  return outTable
 end
 
+function makeSureCall(call, ...)
+    local ret = call(...)
+    print(Dump(ret))
+    if ret and not ret.ok then 
+        if ret.update and ret.update.error_code == 429 then 
+            print("Rate limited for "..parameters.update.retry_after)
+            local amount = parameters.update.retry_after
+            print("Waiting~")
+            ngx.sleep(amount)
+            say.admin("Rate limited: "..Dump(ret))
+            return makeSureCall(call, ...)
+        end
+    end
+    return ret
+end
+
 function logText(chat, text)
     if not text then 
         return
     end
     text = tostring(text)
-    if chat ~= -1 then
-        --print(text:sub(1, text:len()-2))
-    end
     local cname = tostring(chat)
     if chat == -1 then 
         cname = "commands"
@@ -746,19 +751,6 @@ mime_type or  "?").." | ".. msg.document.file_id.."\r\n")
     end
 end
 
-
-
-function ignoreUser(msg, name,set)
-    if not chats[msg.chat.id].data.ignored then 
-        chats[msg.chat.id].data.ignored = {}
-    end
-    chats[msg.chat.id].data.ignored[name] = set
-    if set then 
-        db.executeQuery("INSERT INTO `blocked` (`id`, `name`) VALUES (NULL, '"..name.."')");
-    else 
-        db.executeQuery("DELETE FROM `blocked` WHERE `name` = '"..name.."';")
-    end
-end
 
 
 

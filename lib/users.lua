@@ -39,7 +39,7 @@ function getUserByUsername(uname)
 end
 
 
-function getTargetUser(msg, needTarget)
+function getTargetUser(msg, needTarget, global)
     local tgtStr 
     if msg.text:sub(1,1) == "/" then 
         if msg.text:match("/.-%s([^%s]+)") then 
@@ -51,13 +51,26 @@ function getTargetUser(msg, needTarget)
         tgtStr = tgtStr:gsub("@",""):lower()
         local usr = getUserByUsername(tgtStr)
         if not usr or not (usr.telegramid or usr.id) then 
+            print("No user from "..tgtStr)
+            if tonumber(tgtStr) and users[tonumber(tgtStr)] and users[tonumber(tgtStr)].id then 
+                usr = users[tonumber(tgtStr)]
+                print("from id? "..tgtStr)
+            end
+        end
+        if not usr then 
+            print("NAN")
             return nil, tgtStr
         else 
-            local res = bot.getChatMember(msg.chat.id, usr.telegramid or usr.id)
-            if not res.ok or (res.result.status == "left" or res.result.status == "kicked") then 
-                return nil, tgtStr
+            if global then
+                return usr
+            else
+                local res = bot.getChatMember(msg.chat.id, usr.telegramid or usr.id)
+                if not res.ok or ( (res.result.status == "left" or res.result.status == "kicked")) then 
+                    print("NAAN")
+                    return nil, tgtStr
+                end
+                return res.result.user
             end
-            return res.result.user
         end
     else 
         if msg.reply_to_message and msg.reply_to_message.from and msg.reply_to_message.from  ~= "burrsobot"  then 
@@ -95,12 +108,6 @@ function loadUser(id, username)
                 if ret:getDataString('username'):lower() ~= username then 
                     setUsername = username or ret:getDataString('username'):lower()
                     unse.username = setUsername
-                    if ignored[setUsername] then
-                        ignored[setUsername] = true
-                        updateUsername = setUsername
-                        db.executeQuery("INSERT INTO `blocked` (id, name) VALUES (NULL, '"..setUsername.."');")
-                        say.admin("User "..i.." now is "..setUsername.. " and banned")
-                    end
                     print("Mismatched username! DB="..ret:getDataString('username'):lower().." observed="..tostring(username)) 
                 end
 
@@ -135,7 +142,7 @@ function loadUser(id, username)
                 ret:free()
 
                 if id and targetId ~= id then 
-                    say_admin("Mismatched id: ".. ret:getDataInt('tid').." ~= "..id.. " upon "..username)
+                    say.admin("Mismatched id: ".. ret:getDataInt('tid').." ~= "..id.. " upon "..username)
                     db.executeQuery("DELETE FROM `users` WHERE `tid` = '"..id.."';")
                     db.executeQuery("UPDATE `users` SET tid="..id.." WHERE `username` = '"..db.escapeString(username).."';")
                     targetId = id
@@ -221,7 +228,7 @@ function CheckUser(msg, isNew)
             if isNew then
                 local ret, res = checkUserSafe(msg.chat.id, msg.from.id)
                 if not ret then --or msg.from.username ~= msg.from.username2 or chats[msg.chat.id].data.botEnforced
-                    --say_admin("New user "..msg.from.username.." with unsafe = "..res)
+                    --say.admin("New user "..msg.from.username.." with unsafe = "..res)
                     users[msg.from.id].unsafe = res
                 end
             end
@@ -283,6 +290,9 @@ function SaveUser(id)
     if type(id) == "string" then
         id = id:lower()
     end
+    if tonumber(id) then 
+        id = tonumber(id)
+    end
 
     if users[id] then 
 
@@ -293,7 +303,7 @@ function SaveUser(id)
             if type(id) == "number" then
                 users[id].telegramid = id
             else
-                say_admin("Error saving unknow1 "..id..":"..debug.traceback())
+                say.admin("Error saving unknow1 "..id..":"..debug.traceback())
             end
         end
         
@@ -301,14 +311,14 @@ function SaveUser(id)
         local res, err, erra = db.executeQuery("UPDATE `users` SET `username` = '"..db.escapeString(uname).."', `data`='"..db.escapeString(dat).."', `last_seen`='"..os.time().."' WHERE `tid` = '"..users[id].telegramid.."'") 
         if (res == 0) then
             db.executeQuery("INSERT INTO `users` (`id`, `username`, `data`, `tid`) VALUES (NULL, '"..db.escapeString(uname:lower()).."', '"..db.escapeString(dat).."', '"..users[id].telegramid.."');")
-            say_admin("Error saving users "..uname.." here its data:"..debug.traceback().."\n\n"..dat)
-            say_admin("Saving error describe as: "..tostring(err).." = "..tostring(erra))
+            say.admin("Error saving users "..uname.." here its data:"..debug.traceback().."\n\n"..dat)
+            say.admin("Saving error describe as: "..tostring(err).." = "..tostring(erra))
             logText("users", os.time().."\t"..uname.." "..users[id].telegramid.." "..dat)
             return false
         end
         return true
     else 
-        say_admin("Error saving unknow "..id..":"..debug.traceback()) 
+        say.admin("Error saving unknow "..id..":"..debug.traceback()) 
     end
     return false
  
