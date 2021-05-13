@@ -103,7 +103,7 @@ function loadUser(id, username)
             counter = counter +1
             local unse = unserialize(dat)
             if unse then
-                local setUsername = username
+               local setUsername = username
                 --print("From 1 ->"..tostring(username).." -> "..ret:getDataString('username'):lower())
                 if ret:getDataString('username'):lower() ~= username then 
                     setUsername = username or ret:getDataString('username'):lower()

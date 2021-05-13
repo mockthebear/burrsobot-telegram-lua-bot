@@ -75,7 +75,7 @@ function SetupCommands()
 	
 	
 	addCommand( "say"						, MODE_CHATADMS, "commands/chat-management/say.lua", 2 , "Faz o bot mandar alguma mensagem.\n/say eae blz?")
-	addCommand( "inspect"					, MODE_CHATADMS, "commands/chat-management/inspect.lua", 2 , "Inspeciona uma mensagem.\nResponda a uma mensagem com /inspect" )
+	addCommand( "inspect"					, MODE_ONLY_ADM, "commands/chat-management/inspect.lua", 2 , "Inspeciona uma mensagem.\nResponda a uma mensagem com /inspect" )
 	
 	
 	
@@ -326,7 +326,8 @@ function isCommandDisabledInChat(chatId, command)
             if (chats[chatId].data.disabledc[thisOrFirst(command.words)]) then
             	return true
             end
-        	
+        else 
+        	chats[chatId].data.disabledc = {}
         end
 
         if command.module and chats[chatId].data.disabledModule and chats[chatId].data.disabledc[command.module] then

@@ -89,8 +89,8 @@ function insertInString(str, start, lenght, tag, tagEnd)
     local a1 = utf8.sub(str, 1, start)
     local a2 = utf8.sub(str, start+lenght+1, -1)
     local mid = utf8.sub(str, start+1, start+lenght)
-    local new = (utf8.len(tag) + (tagEnd and utf8.len(tagEnd) or utf8.len(tag))) + 5
-    return a1.."<"..tag..">"..mid.."</"..(tagEnd and tagEnd or tag)..">"..a2, new, utf8.len(tag)+2, (tagEnd and utf8.len(tagEnd) or utf8.len(tag))+3
+    local new = (utf8.len(tag or "") + (tagEnd and utf8.len(tagEnd or "") or utf8.len(tag or ""))) + 5
+    return a1.."<"..tag..">"..mid.."</"..(tagEnd and tagEnd or tag)..">"..a2, new, utf8.len(tag or "")+2, (tagEnd and utf8.len(tagEnd or "") or utf8.len(tag or ""))+3
 end
 
 --Given telegram entities, we parse it and transform in to a HTML text~
@@ -108,6 +108,7 @@ function entitiesToHTML(msg)
         ["underline"] = "u",
         ["text_link"] = 'a href="$url"',
         ["text_mention"] = 'a href="tg://user?id=$userid"',
+
     } 
     local endTagByType = {
         ["bold"] = "b",
@@ -118,9 +119,13 @@ function entitiesToHTML(msg)
         ["underline"] = "u",
         ["text_link"] = 'a',
         ["text_mention"] = 'a',
+
     } 
 
     local function parseTag(str, obj)
+        if str == nil then 
+            error("OH NO: "..Dump(obj))
+        end
         if obj.url then 
             str = str:gsub("%$url", obj.url)
         end
@@ -135,20 +140,22 @@ function entitiesToHTML(msg)
     local mainOffset = 0
     local sections = {}
     for i,b in pairs(msg.entities or msg.caption_entities) do
-        if b.type ~= "bot_command" and b.type ~= "mention" then
+        if b.type ~= "bot_command" and b.type ~= "mention" and b.type ~= "hashtag" and b.type ~= "url" then
             for a,c in pairs(msg.entities or msg.caption_entities) do
                 if i ~= a and not sections[a] and not sections[i] then
-                    if b.offset >= c.offset and (b.offset +b.length) <= (c.offset+c.length) then 
-                        sections[a] = 1
-                        sections[i] = 1
-                        local start = mainOffset + c.offset
-                        original, len, int, out = insertInString(original, start, c.length, parseTag(tagByType[c.type], c) ,  endTagByType[c.type])
-                        mainOffset = mainOffset + len
+                    if c.type ~= "hashtag" and c.type ~= "url" then
+                        if b.offset >= c.offset and (b.offset +b.length) <= (c.offset+c.length) then 
+                            sections[a] = 1
+                            sections[i] = 1
+                            local start = mainOffset + c.offset
+                            original, len, int, out = insertInString(original, start, c.length, parseTag(tagByType[c.type], c) ,  endTagByType[c.type])
+                            mainOffset = mainOffset + len
 
 
-                        start = mainOffset + b.offset + int-1
-                        original, len = insertInString(original, start-out-int+1, b.length, parseTag(tagByType[b.type], b),  endTagByType[b.type])
-                        mainOffset = mainOffset + len
+                            start = mainOffset + b.offset + int-1
+                            original, len = insertInString(original, start-out-int+1, b.length, parseTag(tagByType[b.type], b),  endTagByType[b.type])
+                            mainOffset = mainOffset + len
+                        end
                     end
                 end 
             end
@@ -156,7 +163,7 @@ function entitiesToHTML(msg)
     end
     for i,b in pairs(msg.entities or msg.caption_entities) do
         if not sections[i] then 
-            if b.type ~= "bot_command" and b.type ~= "mention" then
+            if b.type ~= "bot_command" and b.type ~= "mention" and b.type ~= "hashtag" and b.type ~= "url" then
                 local start = mainOffset + b.offset
 
                 original, len = insertInString(original, start, b.length, parseTag(tagByType[b.type], b),  endTagByType[b.type])
