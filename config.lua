@@ -3,7 +3,7 @@ REDIS_PORT = 6379
 
 --fill here your userid
 admins[81891406] = 81891406 
-
+--Insert the bot token here
 BOT_TOKEN = ""
 
 DB_SQLITE3 = "botdb.sqlite3"
