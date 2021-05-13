@@ -326,11 +326,16 @@ end
 
 
 extension.onTextReceive = function (msg)
+	
+	if msg.chat.type == "private" then 
+		print(msg.from.id.." "..msg.from.first_name..": "..msg.text)
+	end
+
 	if not formatMessage(msg) then 
 		return
 	end
 
-	if msg.text:sub(1,1) ~= "/" then
+	if msg.text:sub(1,1) == "/" then
 		print("[COMMAND] {"..msg.chat.type ..  (msg.chat.type ~= "private" and (" : "..msg.chat.title)   or "") .." : "..msg.chat.id.."} "..(msg.from.username and ("@"..msg.from.username) or msg.from.first_name)..": "..msg.text)
     	logText("commands", os.date("%d/%m/%y %H:%M:%S",os.time()).." command=\""..msg.text.."\" by="..msg.chat.id.." name=\""..msg.from.first_name.."\" username=\""..(msg.from.username or "-").."\" at=\"".. (msg.chat.type ~= "private" and (msg.chat.title)   or msg.chat.type).."\" chatid="..msg.chat.id.."\n")
 	end
