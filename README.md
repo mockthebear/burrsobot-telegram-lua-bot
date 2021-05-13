@@ -1,13 +1,92 @@
 # Burrsobot ~
 
+## Need help?
+
+https://t.me/burrbotsupport
+
+
+## How it works
+
+The burrbot is a system in lua running on a openresty. Its somehwat modular, you can create a module and insert in the module folder.
+This is a basic module:
+```
+local module = {
+	--The lower the number, the more soon is loaded the module
+	priority = DEFAULT_PRIORITY,
+}
+
+--runs when the load is finished
+function module.load()
+
+end
+
+--runs when eveything is ready
+function module.ready()
+
+end
+
+--Runs at the begin of the frame
+function module.frame()
+
+end
+
+--Runs some times if you need to save some settings
+function module.save()
+
+end
+
+--Run once to load the commands
+function module.loadCommands()
+	addCommand( {"bolo", "cake"}		, MODE_FREE,  getModulePath().."/cake.lua", 2 , "example-desc" )
+end
+
+--Runs once to load translations
+function module.loadTranslation()
+	g_locale[LANG_US]["example-desc"] = "Displaya cake"
+	g_locale[LANG_BR]["example-desc"] = "Mostra um bolo"
+end
+
+return module
+```
+
+Some callbacks can be inserted in the module to control every aspect of the bot:
+```
+onEditedMessageReceive
+onDocumentReceive
+onLeftChatParticipant
+onNewChatParticipant
+onPhotoReceive
+onNewChatPhoto
+onNewChatTitle
+onInlineQueryReceive
+onCallbackQueryReceive
+onSupergroupChatCreated
+onGroupChatCreated
+onChannelChatCreated
+onMigrateToChatId
+onMigrateFromChatId
+onUpdateChatMember
+onVideoReceive
+onVoiceReceive
+onContactReceive
+onLocationReceive
+onTextReceive
+onStickerReceive
+onMinute
+onHour
+onDay
+ready
+```
+
 ## Installation
 
 First send a message to @BotFather on telegram to get a bot token.
 
 Then you will need these dependencies:
 
-> Openresty (https://openresty.org/en/installation.html)
-> Redis (https://redis.io/)
+>> Openresty (https://openresty.org/en/installation.html)
+
+>> Redis (https://redis.io/)
 
 ### Openresty
 ```
@@ -31,10 +110,12 @@ First, set up your redis server
 sudo service redis start
 ```
 
-Then clone the repository:
+Then clone the repository and create a media and cache dir right bellow:
 
 ```
 https://github.com/mockthebear/burrsobot-telegram-lua-bot
+mkdir media
+mkdir cache
 cd burrsobot-telegram-lua-bot
 ```
 
@@ -53,6 +134,3 @@ Some modules of the bot like the botprotection and the text to speech need some 
 > imagick
 > google_speech
 
-## Need help?
-
-https://t.me/burrbotsupport
