@@ -17,7 +17,10 @@ function core.addStartOption(buttonName, callbackReplyText, tag, callbackFunctio
 end
 
 function core.load()
-
+	if pubsub then 
+		pubsub.registerExternalVariable("chat", "sfw", {type="boolean"}, true, "SFW", "General")
+		--pubsub.registerExternalVariable("chat", "lang", {type="string", valid={"1", "2"}, default="1" }, true, "Action spam", "Nospam")
+	end
 end
 
 --[ONCE] runs when eveything is ready
@@ -36,24 +39,26 @@ function core.save()
 end
 
 function core.loadCommands()
-	addCommand( "disable"						, MODE_CHATADMS, getModulePath().."/disable-command.lua", 2, "core-disable-desc" )
-	addCommand( "enable"						, MODE_CHATADMS, getModulePath().."/enable-command.lua", 2, "core-enable-desc" )
-	addCommand( "disableall"					, MODE_CHATADMS, getModulePath().."/disable-all.lua", 2 , "core-disableall-desc"  )
-	addCommand( "security"						, MODE_CHATADMS, getModulePath().."/security.lua", 2, "core-security-desc"  )
-	addCommand( {"permissions", "permitions"}	, MODE_CHATADMS, getModulePath().."/permitions.lua",7 , "Check permitions")	
+	addCommand( "disable"						, MODE_CHATADMS, getModulePath().."/chat/disable-command.lua", 2, "core-disable-desc" )
+	addCommand( "enable"						, MODE_CHATADMS, getModulePath().."/chat/enable-command.lua", 2, "core-enable-desc" )
+	addCommand( "disableall"					, MODE_CHATADMS, getModulePath().."/chat/disable-all.lua", 2 , "core-disableall-desc"  )
+	addCommand( "security"						, MODE_CHATADMS, getModulePath().."/chat/security.lua", 2, "core-security-desc"  )
+	addCommand( {"permissions", "permitions"}	, MODE_CHATADMS, getModulePath().."/chat/permitions.lua",7 , "Check permitions")	
+
+	addCommand( {"sfw", "nsfw"}					, MODE_CHATADMS,  defaultToggleChatCommand("sfw", "core-sfw-desc-short"), 2 , "core-sfw-desc" )
+
+	addCommand( "logger"						, MODE_CHATADMS, getModulePath().."/chat/logger.lua", 2, "core-logger-desc" )
 
 	addCommand( "commands"					, MODE_FREE, getModulePath().."/list-commands.lua", 1 ,"core-commands-desc" )
 	addCommand( "donate"					, MODE_FREE, getModulePath().."/donate.lua",0 , "core-donate-desc")
 	addCommand( "stats"						, MODE_FREE, getModulePath().."/stats.lua", 2 , "core-stats-desc")
 	addCommand( {"ajuda", "help", "faq"}	, MODE_FREE, getModulePath().."/help.lua", 2 , "core-help-desc")	
 	addCommand( "lang"						, MODE_FREE,  getModulePath().."/lang.lua", 2, "core-lang-desc" )
-	addCommand( "invitelink"				, MODE_FREE,  getModulePath().."/link.lua", 2, "core-link-desc" )
+	addCommand( "invitelink"				, MODE_CHATADMS,  getModulePath().."/chat/link.lua", 2, "core-link-desc" )
 
 
 	
 	
-	addCommand( {"sfw", "nsfw"}					, MODE_CHATADMS, "commands/chat-management/sfw.lua", 2 , "Habilia/deshabiltia modo not safe for work do bot."  )
-	addCommand( "logger"						, MODE_CHATADMS, getModulePath().."/logger.lua", 2, "core-logger-desc" )
 	
 
 
@@ -106,8 +111,8 @@ function core.loadTranslation()
 	g_locale[LANG_US]["core-help-nocmd"] = "Sorry there is no command called %s or /%s.\nTo check commans use /commands"
 	g_locale[LANG_BR]["core-help-nocmd"] = "Desculpe, nem um comando chamado %s ou /%s foi encontrado.\nPara checar os comando existentes use /commands"
 
-	g_locale[LANG_US]["core-help-command"] = "The command <b>/%s</b> have <b>%d</b> seconds of coldown\n\n<code>%s</code>"
-	g_locale[LANG_BR]["core-help-command"] = "O comando <b>/%s</b> possuí <b>%d</b> segundos de coldown.\n\n<code>%s</code>"
+	g_locale[LANG_US]["core-help-command"] = "The command <b>/%s</b> have <b>%d</b> seconds of cooldown\n\n<code>%s</code>"
+	g_locale[LANG_BR]["core-help-command"] = "O comando <b>/%s</b> possuí <b>%d</b> segundos de cooldown.\n\n<code>%s</code>"
 
 	g_locale[LANG_US]["core-lang-desc"] = "Define chat language. Use just '/lang' to see all avaliable laguages and /lang (name) to set"
 	g_locale[LANG_BR]["core-lang-desc"] = "Define a linguagem do chat. Use apenas '/lang' para ver as linguagens disponiveis. E use /lang (nome) para definir uma"
@@ -211,8 +216,11 @@ function core.loadTranslation()
 	g_locale[LANG_US]["core-logger-desc"] = "Used to log chat messages. Comes disabled by default\nUse like this:\n/logger on|off  - to turn on off\n/logger get  - to send the log file in the chat\n/logger erase - to erase the log\n/logger pget - to send the file on your private"
 	g_locale[LANG_BR]["core-logger-desc"] = "Usado para salvar as mensagens do chat. Vem desligado por padrão.\nUse assim:\n/logger on|off  - para ligar desligar logging\n/logger get  - para enviar o arquivo de log no chat\n/logger erase - para apagar arquivo de log\n/logger pget - para enviar o arquivo via private"
 	
-	g_locale[LANG_US][""] = ""
-	g_locale[LANG_BR][""] = ""
+	g_locale[LANG_US]["core-sfw-desc"] = "Toggles the SFW/NSFW commands and other modes"
+	g_locale[LANG_BR]["core-sfw-desc"] = "Habilita desabilita os comandos e modos NSFW"	
+
+	g_locale[LANG_US]["core-sfw-desc-short"] = "SFW mode"
+	g_locale[LANG_BR]["core-sfw-desc-short"] = "Modo sfw"
 	
 	g_locale[LANG_US][""] = ""
 	g_locale[LANG_BR][""] = ""
@@ -269,7 +277,7 @@ function core.listCommandsFancy(msg)
 		end
 		local perLine = 1
 		for _, words in pairs(coms[cmdType]) do
-			commandText = commandText .. "  /"..thisOrFirst(words, g_lang) .. (perLine%4 == 0 and "\n" or "")
+			commandText = commandText .. "  /"..thisOrFirst(words, LANG_US) .. (perLine%4 == 0 and "\n" or "")
 			perLine = perLine +1
 		end
 		if #coms[cmdType] > 0 then
@@ -285,9 +293,11 @@ function core.plsDonate()
     local keyb2 = {}
     keyb2[1] = {}
     keyb2[2] = {}
+    keyb2[3] = {}
 
     keyb2[1][1] = {text = tr("Paypal"), callback_data = "dnt:paypal" } 
-    keyb2[2][1] = {text = tr("PicPay"), url = "http://picpay.me/mockthebear" } 
+    keyb2[2][1] = {text = tr("Pix"), callback_data = "dnt:pix" } 
+    keyb2[3][1] = {text = tr("PicPay"), url = "http://picpay.me/mockthebear" } 
 
 
     local kb2 = cjson.encode({inline_keyboard = keyb2})
@@ -343,7 +353,7 @@ function core.onCallbackQueryReceive(msg)
 			return
 		end
 
-		g_lang = users[msg.from.id].lang
+		g_lang = getUserLang(msg)
 
 		if mode == "br" or mode == "us" then
 			
@@ -374,6 +384,18 @@ function core.onCallbackQueryReceive(msg)
 			bot.editMessageText(msg.message.chat.id, msg.message.message_id, nil, txt..text, "HTML", nil, kb)
 		end
 		return KILL_EXECUTION
+	elseif msg.data:match("dnt:(.+)") then
+		local kd = msg.data:match("dnt:(.+)")
+		local wat = {
+			['paypal'] = 'matheus_diodo@hotmail.com',
+			['pix'] = 'aa5970f8-eac5-4e01-ba9b-c3cf250ac72f',
+		}
+		if wat[kd] then
+			deploy_answerCallbackQuery(msg.id, wat[kd], "true")
+		else 
+			deploy_answerCallbackQuery(msg.id, "?ué")
+		end
+		return		 
 	end
 end
 

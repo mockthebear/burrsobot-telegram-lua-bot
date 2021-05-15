@@ -27,9 +27,9 @@ function OnCommand(msg, text, args)
 		SaveUser(msg.from.id)
 	else
 		if isUserChatAdmin(msg.chat.id, msg.from.id) then
-			chats[msg.chat.id].lang = selected		
+			chats[msg.chat.id].data.lang = selected		
 			g_lang = selected
-			say.html(tr("core-lang-chat", langName(chats[msg.chat.id].lang), langNames))
+			say.html(tr("core-lang-chat", langName(chats[msg.chat.id].data.lang), langNames))
 			SaveChat(msg.chat.id)
 		else 
 			say.delete(tr("default-command-chatdmin"))

@@ -24,6 +24,6 @@ function OnCommand(msg, text, args)
 		reply(tr("core-hel-nocmd",args[2]))
 		return 
 	end
-	bot.sendMessage(msg.chat.id,tr("core-help-command", args[2], comm.coldown, tr(comm.desc and comm.desc or "(sem descrição)") ), "HTML")
+	bot.sendMessage(msg.chat.id,tr("core-help-command", args[2], comm.cooldown, tr(comm.desc and comm.desc or "(sem descrição)") ), "HTML")
 end
 

@@ -22,19 +22,18 @@ function OnCommand(msg, txt, args)
       return
     end
 
-    if chats[msg.chat.id].data.disabledc[thisOrFirst(cmd.words)] then
-      reply(tr("core-disable-noenabled"))
-      return
+    if not chats[msg.chat.id].data.disabledc then 
+      chats[msg.chat.id].data.disabledc = {}
     end
      
-		if cmd.mode == MODE_CHATADMS or cmd.mode == MODE_ONLY_ADM then
-			reply(tr("core-disable-noadm"))
-			return
-		end
+    if not chats[msg.chat.id].data.disabledc[thisOrFirst(cmd.words)] then
+      reply(tr("core-disable-nodisabled"))
+      return
+    end
 
-   	chats[msg.chat.id].data.disabledc[thisOrFirst(cmd.words)] = true
+    chats[msg.chat.id].data.disabledc[thisOrFirst(cmd.words)] = nil
 
     reply(tr("core-disable-disabled", thisOrFirst(cmd.words), disabledCommandString))
 
-   	SaveChat( msg.chat.id )
+    SaveChat( msg.chat.id )
 end

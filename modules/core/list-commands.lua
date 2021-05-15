@@ -10,7 +10,7 @@ function OnCommand(msg, aaa, args, targetChat)
 		say("bingas")
 
 		keyb[1] = {}
-		keyb[1][1] = {text = tr("core-botmenu"), callback_data = "start:" .. (users[msg.from.id].lang == LANG_BR and "br" or "us") }
+		keyb[1][1] = {text = tr("core-botmenu"), callback_data = "start:" .. (getUserLang(msg) == LANG_BR and "br" or "us") }
 
 		local kb = cjson.encode({inline_keyboard = keyb})
 		local ret = bot.sendMessage(chatId, tr("core-commands-commands", commandText), "HTML", true, false, nil, kb)

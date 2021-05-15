@@ -13,10 +13,10 @@ function OnCommand(msg, text, args)
 			reply(tr("Log excluido."))
 		elseif args[2]:find("get") and not args[2]:find("pget") then 
 			reply(tr("Enviando log"))
-			bot.sendDocument(g_chatid, "logs/"..msg.chat.id..".txt", chats[g_chatid].name.." Log!"..(chats[msg.chat.id].data.lastDelete and ("Utimo delete "..chats[msg.chat.id].data.lastDelete) or ""))
+			bot.sendDocument(g_chatid, "logs/"..msg.chat.id..".txt", chats[g_chatid].title.." Log!"..(chats[msg.chat.id].data.lastDelete and ("Utimo delete "..chats[msg.chat.id].data.lastDelete) or ""))
 		elseif args[2]:find("pget") then 
 			reply(tr("Enviando log"))
-			local ret = bot.sendDocument(msg.from.id, "logs/"..msg.chat.id..".txt", chats[g_chatid].name.." Log!")
+			local ret = bot.sendDocument(msg.from.id, "logs/"..msg.chat.id..".txt", chats[g_chatid].title.." Log!")
 			if not ret.ok then 
 				reply_parallel(ret.description.."\nMaybe you have to go one time in private with me?")
 			end
