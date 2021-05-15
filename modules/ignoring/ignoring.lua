@@ -13,11 +13,17 @@ function ignoring.save()
 end
 
 function ignoring.setIgnored(chatid, id, ignored)
+	if not type(chats[chatid].data.ignored) ~= "table" then 
+		chats[chatid].data.ignored = {}
+	end
 	ignoring.ignored[id] = ignored and true or nil
 	SaveChat(chatid)
 end
 
 function ignoring.getIgnored(chatid, id)
+	if not type(chats[chatid].data.ignored) ~= "table" then 
+		chats[chatid].data.ignored = {}
+	end
 	return chats[chatid].data.ignored[id] and true or false
 end
 function ignoring.setIgnoredGlobal(chatid, id, ignored)
@@ -35,7 +41,7 @@ function ignoring.isIgnored( msg )
 		return  KILL_EXECUTION
 	end
 
-	if msg.isChat and chats[msg.chat.id] and chats[msg.chat.id].data.ignored and chats[msg.chat.id].data.ignored[msg.from.id] then 
+	if msg.isChat and chats[msg.chat.id] and type(chats[msg.chat.id].data.ignored) == "table" and chats[msg.chat.id].data.ignored[msg.from.id] then 
 		print("Ignored by chat")
 		return KILL_EXECUTION
 	end
