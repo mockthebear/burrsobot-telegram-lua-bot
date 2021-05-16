@@ -153,6 +153,10 @@ function loadUser(id, username)
                 unse.telegramid = targetId 
                 users[username] = unse
                 users[targetId] = unse
+                if not users[targetId].id then 
+                    users[targetId].id = targetId
+                    users[targetId].first_name = username
+                end
  
 
                 if not unse.username then 

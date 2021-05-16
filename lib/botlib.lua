@@ -191,6 +191,9 @@ function formatUserHtml(msg)
     if not msg.from.id then 
         msg.from.id = telegramid
     end
+    if not msg.from.id then 
+    	return (msg.from.username and ("@"..msg.from.username) or (msg.from.first_name or "?"):htmlFix())
+    end
     return ('<a href="tg://user?id='..msg.from.id..'">'..(msg.from.username and ("@"..msg.from.username) or (msg.from.first_name or "?name?"):htmlFix())..'</a>')
 end
 
