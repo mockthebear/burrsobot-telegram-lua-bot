@@ -1,9 +1,9 @@
 local module = {
-	require = {
+	--[[require = {
 		os = {
 			"google_speech"
 		}
-	}
+	}]]
 }
 
 --[ONCE] runs when the load is finished
