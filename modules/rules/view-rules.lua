@@ -9,7 +9,7 @@ function OnCommand(msg, aaa, args, targetChat)
 			kb = JSON:encode({inline_keyboard = keyb })
 			local ret = bot.sendMessage(msg.chat.id,tr("rules-rules-button").." <b>"..chats[targetChat].title.."</b>\n"..chats[targetChat].data.rules , "HTML",true,false, nil, kb)
 			if not ret.ok then 
-				say.admin("error on rules of "..targetChat.." due: "..res.description)
+				say.admin("error on rules of "..targetChat.." due: "..ret.description)
 				bot.sendMessage(msg.chat.id,tr("rules-rules-button").." *"..chats[targetChat].title.."*\n"..chats[targetChat].data.rules , "",true,false, nil, kb)
 			end
 		else 

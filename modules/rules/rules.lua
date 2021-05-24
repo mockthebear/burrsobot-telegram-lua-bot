@@ -1,7 +1,13 @@
+
+
 local rules = {}
 
 --[ONCE] runs when the load is finished
 function rules.load()
+	if pubsub then
+		pubsub.registerExternalVariable("chat", "rules", {type="string", lenght=4024, fancy=true}, true, "The rules of your chat", "Rules")
+		pubsub.registerExternalVariable("chat", "rulesPvt", {type="boolean"}, true, "Show rules on private when using /rules", "Rules")
+	end
 end
 
 --[ONCE] runs when eveything is ready
@@ -58,6 +64,9 @@ function rules.loadTranslation()
 
 	g_locale[LANG_BR]["rules-norules"] = "Nenhuma regra setada"
 	g_locale[LANG_US]["rules-norules"] = "No rules set"
+
+
+
 end
 
 
