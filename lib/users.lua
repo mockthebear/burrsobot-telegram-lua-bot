@@ -118,6 +118,11 @@ function loadUser(id, username)
                 users[setUsername] = unse
                 users[id] = unse
                 obj = users[id]
+
+                for i,b in pairs(obj) do
+                    g_redis:hset("user:"..id, i, tostring(b))
+                end
+
                 found = true
             else 
                 print("Failed to parse~")
@@ -163,7 +168,11 @@ function loadUser(id, username)
                     unse.username = username
                 end
 
-                 obj = users[targetId]
+                obj = users[targetId]
+
+                for i,b in pairs(obj) do
+                    g_redis:hset("user:"..targetId, i, tostring(b))
+                end
             end
             
             ret:free()

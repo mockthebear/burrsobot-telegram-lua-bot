@@ -189,7 +189,7 @@ end
 extension.onInlineQueryReceive = function(msg)
 	if not runModulesMethod(msg, "onInlineQueryReceive") then 
 		return
-	end
+	end	
 end
 
 extension.onCallbackQueryReceive = function(msg)
@@ -289,6 +289,7 @@ extension.onVoiceReceive = function(msg)
 	if not formatMessage(msg) then 
 		return
 	end
+
 	if not runModulesMethod(msg, "onVoiceReceive") then 
 		return
 	end
@@ -325,8 +326,11 @@ extension.onStickerReceive = function(msg)
 end
 
 
+extension.onScheduleWarning = function (amount)
+	say.admin("We have a total of "..amount.." scheduled messages.")
+end
+
 extension.onTextReceive = function (msg)
-	
 	if msg.chat.type == "private" then 
 		print(msg.from.id.." "..msg.from.first_name..": "..msg.text)
 	end

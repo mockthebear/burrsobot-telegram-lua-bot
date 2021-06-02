@@ -25,6 +25,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 local encode = require("multipart.multipart-post").encode
 local JSON = require("JSON")
+local cjson = require("cjson")
 
  
 local httpc = require("resty.http").new()
@@ -102,7 +103,9 @@ local function configure(token)
 
 
   M.requests = {}
+  M.scheduled = {}
   M.requestCounter = 0
+  M.warnScheduled = os.time()
 
 
   local bot_info = M.getMe()
@@ -142,8 +145,36 @@ function getHttpConnection( makenew)
   return obj
 end
 
-function makeRequest(method, body, forceHttpConn)
-  local body, boundary = encode(body)
+function schedule_request(method, body)
+  M.scheduled[M.requestCounter] = {
+    method, body, os.time()+10
+  }
+end
+
+
+function run_scheduled()
+  local schdN = 0
+  for i,b in pairs(M.scheduled) do 
+    schdN = schdN +1
+    if b[3] <= os.time() then 
+      makeRequest(b[1], b[2])
+      M.scheduled[i] = nil
+      break
+    end  
+  end
+
+  if schdN > 0 then 
+    print("Total of "..schdN.. " scheduled messages")
+    if M.warnScheduled < os.time() then 
+      M.warnScheduled = os.time()+10
+      E.onScheduleWarning(schdN)
+    end
+  end
+end
+
+
+function makeRequest(method, body_arg, forceHttpConn, disableSchedule)
+  local body, boundary = encode(body_arg)
 
   local connModule = getHttpConnection(true)
 
@@ -166,6 +197,8 @@ function makeRequest(method, body, forceHttpConn)
   M.requests[(M.requestCounter%10) + 1] = post
   M.requestCounter = M.requestCounter + 1
   
+
+
   
   if not res then
     ngx.log(ngx.ERR, "request failed: ", err)
@@ -179,12 +212,20 @@ function makeRequest(method, body, forceHttpConn)
     return r
   end
 
+
+  local bdjs = cjson.decode(res.body or '{"no response"}')
+
+  if bdjs.error_code == 429 and not disableSchedule then 
+    print("scheduled~")
+    schedule_request(method, body_arg)
+  end
+
   local r = {
     success = 1,
     code = res.status or "0",
     headers = table.concat(res.headers or {"no headers"}),
     status = res.status or "0",
-    body = res.body and res.body or '{"no response"}',
+    body = bdjs or '{"no response"}',
   }
 
   return r
@@ -202,7 +243,7 @@ local function getFile(file_id)
   local response = makeRequest("getFile",request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -251,7 +292,7 @@ local function downloadFile(file_id, download_path)
   else
 
     local connModule = getHttpConnection(true)
-    print("https://api.telegram.org/bot"..M.token.."/" .. file_info.result.file_path)
+    
     local res, err = connModule:request_uri("https://api.telegram.org/file/bot"..M.token.."/" .. file_info.result.file_path, {
       method = "GET",
       ssl_verify=false,
@@ -351,7 +392,7 @@ local function getUpdates(offset, limit, timeout, allowed_updates)
   local response =  makeRequest("getUpdates", request_body, false)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -366,7 +407,7 @@ local function getMe()
   local response = makeRequest("getMe",request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -400,7 +441,7 @@ local function sendMessage(chat_id, text, parse_mode, disable_web_page_preview, 
   local response = makeRequest("sendMessage",request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -432,7 +473,7 @@ local function setChatPhoto(chat_id, filename)
   local response = makeRequest("setChatPhoto",request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -453,7 +494,7 @@ local function unpinChatMessage(chat_id, message_id)
   local response = makeRequest("unpinChatMessage",request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -472,7 +513,7 @@ local function createChatInviteLink(chat_id, expire_date)
   local response = makeRequest("createChatInviteLink",request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -491,7 +532,7 @@ local function pinChatMessage(chat_id, message_id, disable_notification)
   local response = makeRequest("pinChatMessage",request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -510,7 +551,7 @@ local function setChatTitle(chat_id,title)
   local response = makeRequest("setChatTitle",request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -535,7 +576,7 @@ local function restrictChatMember(chat_id, user_id, until_date, can_send_media_m
   local response = makeRequest("restrictChatMember",request_body)
 
     if (response.success == 1) then
-      return JSON:decode(response.body)
+      return response.body
     else
       return nil, "Request Error"
   end
@@ -559,7 +600,7 @@ local function createNewStickerSet(user_id, name, title, png_sticker, emojis, co
   local response = makeRequest("createNewStickerSet",request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -583,7 +624,7 @@ local function addStickerToSet(user_id, name, png_sticker, emojis, contains_mask
   local response = makeRequest("addStickerToSet",request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -605,7 +646,7 @@ local function deleteMessage(chat_id, message_id)
   local response = makeRequest("deleteMessage",request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -629,7 +670,7 @@ local function forwardMessage(chat_id, from_chat_id, disable_notification, messa
   local response = makeRequest("forwardMessage",request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -671,7 +712,7 @@ local function sendPhoto(chat_id, photo, caption, disable_notification, reply_to
   local response = makeRequest("sendPhoto",request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -715,7 +756,7 @@ local function sendAudio(chat_id, audio, caption, duration, performer, title, di
   local response = makeRequest("sendAudio",request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -756,7 +797,7 @@ local function sendDocument(chat_id, document, caption, disable_notification, re
   local response = makeRequest("sendDocument",request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -801,7 +842,7 @@ local function sendSticker(chat_id, sticker, disable_notification, reply_to_mess
   local response = makeRequest("sendSticker",request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -843,7 +884,7 @@ local function sendVideo(chat_id, video, duration, caption, disable_notification
   local response = makeRequest("sendVideo",request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -885,7 +926,7 @@ local function sendVoice(chat_id, voice, caption, duration, disable_notification
   local response = makeRequest("sendVoice",request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -911,7 +952,7 @@ local function sendLocation(chat_id, latitude, longitude, disable_notification, 
   local response = makeRequest("sendLocation",request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -942,10 +983,10 @@ local function sendChatAction(chat_id, action)
   request_body.chat_id = chat_id
   request_body.action = action
 
-  local response = makeRequest("sendChatAction",request_body)
+  local response = makeRequest("sendChatAction",request_body, nil, true)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -966,7 +1007,7 @@ local function getUserProfilePhotos(user_id, offset, limit)
   local response = makeRequest("getUserProfilePhotos",request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -991,10 +1032,10 @@ local function answerInlineQuery(inline_query_id, results, cache_time, is_person
   request_body.switch_pm_text = tostring(switch_pm_text)
   request_body.switch_pm_parameter = tostring(switch_pm_text)
 
-  local response = makeRequest("answerInlineQuery",request_body)
+  local response = makeRequest("answerInlineQuery",request_body, nil, true)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -1027,7 +1068,7 @@ local function sendVenue(chat_id, latitude, longitude, title, adress, foursquare
   local response = makeRequest("sendVenue",request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -1052,7 +1093,7 @@ local function sendContact(chat_id, phone_number, first_name, last_name, disable
   local response = makeRequest("sendContact",request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -1072,7 +1113,7 @@ local function kickChatMember(chat_id, user_id)
 	local response = makeRequest("kickChatMember",request_body)
 
 	  if (response.success == 1) then
-	    return JSON:decode(response.body)
+	    return response.body
 	  else
 	    return nil, "Request Error"
   end
@@ -1092,7 +1133,7 @@ local function unbanChatMember(chat_id, user_id)
 	local response = makeRequest("unbanChatMember",request_body)
 
 	  if (response.success == 1) then
-	    return JSON:decode(response.body)
+	    return response.body
 	  else
 	    return nil, "Request Error"
   end
@@ -1100,21 +1141,22 @@ end
 
 M.unbanChatMember = unbanChatMember
 
-local function answerCallbackQuery(callback_query_id, text, show_alert, cache_time)
+local function answerCallbackQuery(callback_query_id, text, show_alert, cache_time, url)
 
 	if not callback_query_id then return nil, "callback_query_id not specified" end
 
 	local request_body = {}
 
 	request_body.callback_query_id = tostring(callback_query_id)
-	request_body.text = tostring(text)
+	request_body.text = text
 	request_body.show_alert = tostring(show_alert)
 	request_body.cache_time = tostring(cache_time)
+  request_body.url = url
 	
-	local response = makeRequest("answerCallbackQuery",request_body)
+	local response = makeRequest("answerCallbackQuery",request_body, nil, true)
 
 	  if (response.success == 1) then
-	    return JSON:decode(response.body)
+	    return response.body
 	  else
 	    return nil, "Request Error"
   end
@@ -1139,10 +1181,10 @@ local function editMessageText(chat_id, message_id, inline_message_id, text, par
   request_body.disable_web_page_preview = disable_web_page_preview
   request_body.reply_markup = reply_markup
 
-  local response = makeRequest("editMessageText",request_body)
+  local response = makeRequest("editMessageText",request_body, nil, true)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -1169,7 +1211,7 @@ local function editMessageCaption(chat_id, message_id, inline_message_id, captio
   local response = makeRequest("editMessageCaption",request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -1193,7 +1235,7 @@ local function editMessageReplyMarkup(chat_id, message_id, inline_message_id, re
   local response = makeRequest("editMessageReplyMarkup",request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -1213,7 +1255,7 @@ local function getChat(chat_id)
   local response = makeRequest("getChat", request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -1231,7 +1273,7 @@ local function leaveChat(chat_id)
   local response = makeRequest("leaveChat", request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -1249,7 +1291,7 @@ local function getChatAdministrators(chat_id)
   local response = makeRequest("getChatAdministrators", request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -1267,7 +1309,7 @@ local function getChatMembersCount(chat_id)
   local response = makeRequest("getChatMembersCount", request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -1285,7 +1327,7 @@ local function deleteChatPhoto(chat_id)
   local response = makeRequest("deleteChatPhoto", request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -1306,7 +1348,7 @@ local function getChatMember(chat_id, user_id)
   local response = makeRequest("getChatMember", request_body)
 
   if (response.success == 1) then
-    return JSON:decode(response.body)
+    return response.body
   else
     return nil, "Request Error"
   end
@@ -1336,6 +1378,9 @@ E.onStickerReceive = onStickerReceive
 
 local function onVideoReceive(message) end
 E.onVideoReceive = onVideoReceive
+
+local function onScheduleWarning(message) end
+E.onScheduleWarning = onScheduleWarning
 
 local function onVoiceReceive(message) end
 E.onVoiceReceive = onVoiceReceive
@@ -1400,6 +1445,20 @@ E.onChannelEditPost = onChannelEditPost
 function onUpdateChatMember(post) end
 E.onUpdateChatMember = onUpdateChatMember
 
+function onDiceReceive(post) end
+E.onDiceReceive = onDiceReceive
+
+function onPollReceive(post) end
+E.onPollReceive = onPollReceive
+
+
+function onDiceReceive(post) end
+E.onDiceReceive = onDiceReceive
+
+function onPollAwnswerReceive(post) end
+E.onPollAwnswerReceive = onPollAwnswerReceive
+
+
 local function onUnknownTypeReceive(unknownType)
   print("New type as:")
   for i,b in pairs(unknownType) do 
@@ -1459,7 +1518,13 @@ local function parseUpdateCallbacks(update)
     elseif (update.message.migrate_to_chat_id) then
       E.onMigrateToChatId(update.message)
     elseif (update.message.migrate_from_chat_id) then
-      E.onMigrateFromChatId(update.message)
+      E.onMigrateFromChatId(update.message)    
+    elseif (update.message.dice) then
+      E.onDiceReceive(update.message)    
+    elseif (update.message.poll_answer) then
+      E.onPollAwnswerReceive(update.message)    
+    elseif (update.message.poll) then
+      E.onPollReceive(update.message)
     else
       E.onUnknownTypeReceive(update)
     end
@@ -1510,6 +1575,7 @@ local function run(limit, timeout, hook)
   M.timers = {}
   M.ctr = {[0]=0,[1]=0,[2]=0,[3]=0}
   M.final = {[0]=0,[1]=0,[2]=0,[3]=0}
+
   while true do 
       M.timers[0] = os.clock()
 
@@ -1537,7 +1603,12 @@ local function run(limit, timeout, hook)
         M.final[3] = M.ctr[3]/M.ctr[0]
       end
 
+
+      run_scheduled()
+
   end
+
+
 end
 E.processFrame = processFrame
 E.run = run
