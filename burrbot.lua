@@ -327,7 +327,11 @@ end
 
 
 extension.onScheduleWarning = function (amount)
-	say.admin("We have a total of "..amount.." scheduled messages.")
+	local types = ""
+	for i,b in pairs(extension.scheduled) do 
+		types = types .. tostring(b[1])..", "
+	end
+	say.admin("We have a total of "..amount.." scheduled messages <code>["..types.."]</code>")
 end
 
 extension.onTextReceive = function (msg)
