@@ -182,6 +182,9 @@ function loadUser(id, username)
 end
 
 function isUserChatAdmin(chat, id)
+    if id == 777000 then 
+        return true
+    end
     if type(chat) == "table" then 
         id = chat.from.id
         chat = chat.chat.id
@@ -318,6 +321,10 @@ function SaveUser(id)
             else
                 say.admin("Error saving unknow1 "..id..":"..debug.traceback())
             end
+        end
+
+        for i,b in pairs(users[id]) do
+            g_redis:hset("user:"..id, i, tostring(b))
         end
         
         local dat = serialize(users[id])
