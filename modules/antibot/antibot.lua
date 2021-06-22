@@ -9,6 +9,7 @@ function antibot.load()
 		pubsub.registerExternalVariable("chat", "botProtection", {type="boolean"}, true, "Bot protection", "Anti-bot")
 		pubsub.registerExternalVariable("chat", "botEnforced", {type="boolean"}, true, "Enforce bot protection (force the check on any users)", "Anti-bot")
 		pubsub.registerExternalVariable("chat", "ignoreInviteLink", {type="boolean"}, true, "Captcha ignoring invite link", "Anti-bot")
+		pubsub.registerExternalVariable("chat", "no_nudes", {type="boolean"}, true, "Lock user for 5 minuts to start psoting photos", "Anti-bot")
 	end
 	if core then  
 		core.addStartOption("Anti bot protection", "OwO", "nobot", function() return tr("antibot-start-desc") end )
@@ -278,45 +279,57 @@ function antibot.onNewChatParticipant(msg)
 	local restricted = false
 
 	if users[msg.new_chat_participant.id] then
+
+
 			
 		if (chats[msg.chat.id].data.botProtection) then
-			--print('fromLink = ',fromLink)
-			if not fromLink and ((chats[msg.chat.id].data.botProtection and users[msg.new_chat_participant.id] and (users[msg.new_chat_participant.id].unsafe or (users[msg.new_chat_participant.id].bot_banned and  tonumber(users[msg.new_chat_participant.id].bot_banned) or os.time()+9999)  < os.time()) ) or chats[msg.chat.id].data.botEnforced ) then 
-				bot.restrictChatMember(msg.chat.id, msg.new_chat_participant.id, -1, false, false, false, false)
-				local hasUname = msg.new_chat_participant.username2 == msg.new_chat_participant.username
-				local lname = originalUname and ("@"..msg.new_chat_participant.username) or msg.new_chat_participant.first_name
-	
-				local reason = nil
-				if chats[msg.chat.id].data.botEnforced then 
-					reason = tr("Chat rules")
-				else 
-					reason = users[msg.new_chat_participant.id].unsafe
+
+			local shouldCheck = true
+			if not chats[msg.chat.id].data.botEnforced then 
+				if users[msg.new_chat_participant.id].is_human_permanent then 
+					shouldCheck = false
 				end
-				local msger,ttt = antibot.formatKickMessage(msg.chat.id,msg.new_chat_participant.id, msg.new_chat_participant.first_name, msg.new_chat_participant.originalUname, reason, g_msg.message_id)
-					
-				chats[msg.chat.id]._tmp.checking[msg.new_chat_participant.id] = true
-				
-				local eventId = scheduleEvent(120, antibot.botUserCheck, msg, msger.result.message_id) 
-				users[msg.new_chat_participant.id].todelete = msger.result.message_id
-				users[msg.new_chat_participant.id].bot_procedure_check = eventId
-				print("Proc: "..eventId)
-				
-
-				scheduleEvent(110, antibot.checkBotStillInChat, {event=eventId,id = msg.new_chat_participant.id, chat = msg.chat.id, username = msg.new_chat_participant.username, msg = msger.result.message_id, name=msg.new_chat_participant.first_name:htmlFix(), mid=msg.message_id } )
-
-				SaveUser(msg.new_chat_participant.id)
-
-				restricted = true
-
 			end
-		end
 
-		if not fromLink and  users[msg.new_chat_participant.id].bot_banned and ( tonumber(users[msg.new_chat_participant.id].bot_banned) or os.time()+9999) > os.time() then 
-			assertMsg(bot.sendMessage(g_chatid,tr("<b>Attention!</b> User <a href=\"tg://user?id=%d\">%s</a> has failed before to prove its a bot in another chat. This user might be a bot.%s",
-				msg.new_chat_participant.id, 
-				msg.new_chat_participant.first_name:htmlFix()..""..(msg.new_chat_participant.originalUname and (" (@"..msg.new_chat_participant.originalUname..")") or "" ),
-				chats[msg.chat.id].data.botProtection and "" or "\nMight be a good idea enable /botprotection"
-				),"HTML"))
+			if shouldCheck then
+				--print('fromLink = ',fromLink)
+				if not fromLink and ((chats[msg.chat.id].data.botProtection and users[msg.new_chat_participant.id] and (users[msg.new_chat_participant.id].unsafe or (users[msg.new_chat_participant.id].bot_banned and  tonumber(users[msg.new_chat_participant.id].bot_banned) or os.time()+9999)  < os.time()) ) or chats[msg.chat.id].data.botEnforced ) then 
+					bot.restrictChatMember(msg.chat.id, msg.new_chat_participant.id, -1, false, false, false, false)
+					local hasUname = msg.new_chat_participant.username2 == msg.new_chat_participant.username
+					local lname = originalUname and ("@"..msg.new_chat_participant.username) or msg.new_chat_participant.first_name
+		
+					local reason = nil
+					if chats[msg.chat.id].data.botEnforced then 
+						reason = tr("Chat rules")
+					else 
+						reason = users[msg.new_chat_participant.id].unsafe
+					end
+					local msger,ttt = antibot.formatKickMessage(msg.chat.id,msg.new_chat_participant.id, msg.new_chat_participant.first_name, msg.new_chat_participant.originalUname, reason, g_msg.message_id)
+						
+					chats[msg.chat.id]._tmp.checking[msg.new_chat_participant.id] = true
+					
+					local eventId = scheduleEvent(120, antibot.botUserCheck, msg, msger.result.message_id) 
+					users[msg.new_chat_participant.id].todelete = msger.result.message_id
+					users[msg.new_chat_participant.id].bot_procedure_check = eventId
+					print("Proc: "..eventId)
+					
+
+					scheduleEvent(110, antibot.checkBotStillInChat, {event=eventId,id = msg.new_chat_participant.id, chat = msg.chat.id, username = msg.new_chat_participant.username, msg = msger.result.message_id, name=msg.new_chat_participant.first_name:htmlFix(), mid=msg.message_id } )
+
+					SaveUser(msg.new_chat_participant.id)
+
+					restricted = true
+
+				end
+			end
+
+			if not fromLink and  users[msg.new_chat_participant.id].bot_banned and ( tonumber(users[msg.new_chat_participant.id].bot_banned) or os.time()+9999) > os.time() then 
+				assertMsg(bot.sendMessage(g_chatid,tr("<b>Attention!</b> User <a href=\"tg://user?id=%d\">%s</a> has failed before to prove its a bot in another chat. This user might be a bot.%s",
+					msg.new_chat_participant.id, 
+					msg.new_chat_participant.first_name:htmlFix()..""..(msg.new_chat_participant.originalUname and (" (@"..msg.new_chat_participant.originalUname..")") or "" ),
+					chats[msg.chat.id].data.botProtection and "" or "\nMight be a good idea enable /botprotection"
+					),"HTML"))
+			end
 		end
 
 		if not users[msg.new_chat_participant.id].bot_banned and not chats[msg.chat.id]._tmp.checking[msg.new_chat_participant.id] then
@@ -606,6 +619,7 @@ end
 
 function antibot.loadCommands()
 	addCommand( "notabot" 					, MODE_UNLISTED, getModulePath().."/rlsbot.lua", 2 , "-" )
+	addCommand( "human" 					, MODE_ONLY_ADM, getModulePath().."/human.lua", 2 , "-" )
 	addCommand( "botprotection"				, MODE_CHATADMS, getModulePath().."/botprotecc.lua", 2, "antibot-desc"  )
 	addCommand( "botcheck"					, MODE_CHATADMS, getModulePath().."/checkbot.lua", 2, "Força a verificação de bot em um usuario."  )
 	addCommand( "nomedia"					, MODE_CHATADMS, getModulePath().."/nophoto.lua", 2, "Liga/Desliga proteção contra midia direta."  )
