@@ -326,10 +326,10 @@ extension.onStickerReceive = function(msg)
 end
 
 
-extension.onScheduleWarning = function ()
+extension.onScheduleWarning = function (msgs)
 	local types = ""
 	local amount = 0
-	for i,b in pairs(extension.scheduled) do 
+	for i,b in pairs(msgs) do 
 		types = types .. tostring(b[1])..", "
 		amount = amount +1
 	end
