@@ -154,7 +154,7 @@ function loadUser(id, username)
                 end
 
                 --print("Assigned as: "..username.." = ".. targetId)
-
+                unse._tmp = {}
                 unse.telegramid = targetId 
                 users[username] = unse
                 users[targetId] = unse
@@ -182,6 +182,9 @@ function loadUser(id, username)
 end
 
 function isUserChatAdmin(chat, id)
+    if id == 777000 then 
+        return true
+    end
     if type(chat) == "table" then 
         id = chat.from.id
         chat = chat.chat.id
@@ -229,7 +232,7 @@ function CheckUser(msg, isNew)
         loded = loadUser(msg.from.id, msg.from.username)
         if not loded then
             print("New user: ",msg.from.username .. ":"..msg.from.id) 
-            users[msg.from.username] = {telegramid = msg.from.id, first_name=msg.from.first_name, username=msg.from.username, joinDate={}}
+            users[msg.from.username] = {telegramid = msg.from.id, first_name=msg.from.first_name, username=msg.from.username, joinDate={}, _tmp = {}}
             users[msg.from.id] = users[msg.from.username]
             
             if msg.chat and chats[msg.chat.id] then
@@ -317,6 +320,12 @@ function SaveUser(id)
                 users[id].telegramid = id
             else
                 say.admin("Error saving unknow1 "..id..":"..debug.traceback())
+            end
+        end
+
+        for i,b in pairs(users[id]) do
+            if i ~= "_tmp" then
+                g_redis:hset("user:"..id, i, tostring(b))
             end
         end
         

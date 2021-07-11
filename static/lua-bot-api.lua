@@ -167,7 +167,7 @@ function run_scheduled()
     print("Total of "..schdN.. " scheduled messages")
     if M.warnScheduled < os.time() then 
       M.warnScheduled = os.time()+10
-      E.onScheduleWarning(schdN)
+      E.onScheduleWarning(M.scheduled)
     end
   end
 end

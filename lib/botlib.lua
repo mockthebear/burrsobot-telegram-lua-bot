@@ -729,6 +729,7 @@ end
 function logMessage(msg, typ)
     if msg then  
         if msg.from and msg.chat and msg.chat.id and ( chats[msg.chat.id] and chats[msg.chat.id].data and chats[msg.chat.id].data.dolog) then 
+        	msg.message_id  = msg.message_id  or 0
            	local header = msg.message_id.." | ".. os.date("%d/%m/%y %H:%M:%S", tonumber(msg.date)) 
 
 
