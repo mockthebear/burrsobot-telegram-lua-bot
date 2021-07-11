@@ -65,11 +65,11 @@ function notifyme.onTextReceive(msg)
                     notified[user] = true
                     if not notifyme.g_lastPvt[user] or notifyme.g_lastPvt[user] <= os.time() then
                         if i then
-                            if not notifyme.notifyWord(msg.from.id, msg, word) then
+                            if not notifyme.notifyWord(user, msg, word) then
                                 nonAuth = nonAuth .."@"..user.."\n"
                             end
                         end
-                        notifyme.g_lastPvt[user] = os.time() + (users[msg.from.id].notifyInterval or 60)
+                        notifyme.g_lastPvt[user] = os.time() + (users[user].notifyInterval or 60)
                     end
                 end
             end
