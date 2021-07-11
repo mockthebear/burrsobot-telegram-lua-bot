@@ -16,7 +16,7 @@ function OnCommand(msg, text, args)
 		if args[2] then 
 			welcome = entitiesToHTML(msg)
 			--Cut off the command
-			welcome = welcome:gsub("/([a-zA-Z@])%s")
+			welcome = welcome:gsub("^/([a-zA-Z@])%s", "", 1)
 		else 
 			welcome = entitiesToHTML(msg.reply_to_message)
 		end

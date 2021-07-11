@@ -15,6 +15,7 @@ function OnCommand(msg, text, args)
 
 		if not users[msg.from.id].telegramid then 
 			reply(tr("raffle-no-permission"))
+			return 
 		end
 		
 
@@ -42,7 +43,9 @@ function OnCommand(msg, text, args)
 			local JSON = require("JSON")
 			local kb = JSON:encode({inline_keyboard = keyb})
 			local msg2 = bot.sendMessage(g_chatid, raffle.renderSorteioMsg(text, {}, true), "HTML", true, false, nil, kb)
-
+			if type(raffle.open[msg.chat.id]) == "string" then
+				raffle.open[msg.chat.id] = {}
+			end
 			raffle.open[msg.chat.id][sorteioId] = {
 				users = {},
 				creator = msg.from.id,

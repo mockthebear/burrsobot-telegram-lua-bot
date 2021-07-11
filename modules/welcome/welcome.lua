@@ -7,6 +7,7 @@ local JSON = require("JSON")
 function welcome.load()
 	if pubsub then
 		pubsub.registerExternalVariable("chat", "welcome", {type="string", lenght=4024}, true, "Welcome message", "Welcoming")
+		pubsub.registerExternalVariable("chat", "disable_welcome", {type="boolean"}, true, "Disable welcome messages", "Welcoming")
 	end
 end
 
@@ -108,13 +109,21 @@ function welcome.format(text, user, chat)
     text = text:gsub("<name>", user.first_name:htmlFix() )  
     text = text:gsub("<username>", user.originalUname and ("@"..user.originalUname) or formatUserHtml(user))
     text = text:gsub("<chat>", chat.title or "?") 
+    if text:find("<members>") then 
+    	local mc = bot.getChatMembersCount(g_chatid)
+    	local amount = '?'
+    	if mc.ok then 
+    		amount = mc.result
+    	end
+    	text = text:gsub("<members>", amount) 
+    end
     return text
 end
 
 
 function welcome.SendWelcomeAndValidate(msg, kb, append)
 	local ret = welcome.sendWelcomeMessage(msg, kb, append)
-	if ret.ok == false then 
+	if ret and ret.ok == false then 
 		return false, ret.description
 	end
 	return true, nil
@@ -138,7 +147,7 @@ function welcome.sendWelcomeMessage(msg, kb, append)
         return bot.sendPhoto(msg.chat.id, file, txt, false, msg.message_id, kb, "HTML")
     elseif  text:match("IIDI:(.-):(.+)") then 
         local file, txt =  text:match("IIDI:(.-):(.+)")
-        bot.sendDocument(msg.chat.id, file, txt, false, msg.message_id, kb, "HTML")
+        return bot.sendDocument(msg.chat.id, file, txt, false, msg.message_id, kb, "HTML")
     elseif  text:match("STCKR:(.+)") then 
         local stckrId = text:match("STCKR:(.+)")
         return bot.sendSticker(msg.chat.id, stckrId, false, msg.message_id, kb)
@@ -158,7 +167,9 @@ end
 
 function welcome.onNewChatParticipant(msg)
 	if msg.from.id ~= g_id then
-		welcome.sendWelcomeMessage(msg)
+		if not chats[msg.chat.id].data.disable_welcome then
+			welcome.sendWelcomeMessage(msg)
+		end
 	end
 end
 

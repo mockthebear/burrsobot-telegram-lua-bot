@@ -1,7 +1,7 @@
 function OnCommand(msg, aaa, args, targetChat)
 	--If used trought another call
 	if targetChat ~= msg.chat.id then
-		if chats[targetChat].data.rules then
+		if chats[targetChat] and chats[targetChat].data.rules then
 			local JSON = require("JSON")
 			local keyb = {}
 			keyb[1] = {}
