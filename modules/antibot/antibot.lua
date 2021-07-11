@@ -9,7 +9,8 @@ function antibot.load()
 		pubsub.registerExternalVariable("chat", "botProtection", {type="boolean"}, true, "Bot protection", "Anti-bot")
 		pubsub.registerExternalVariable("chat", "botEnforced", {type="boolean"}, true, "Enforce bot protection (force the check on any users)", "Anti-bot")
 		pubsub.registerExternalVariable("chat", "ignoreInviteLink", {type="boolean"}, true, "Captcha ignoring invite link", "Anti-bot")
-		pubsub.registerExternalVariable("chat", "no_nudes", {type="boolean"}, true, "Lock user for 5 minuts to start psoting photos", "Anti-bot")
+		pubsub.registerExternalVariable("chat", "no_nudes", {type="boolean"}, true, "Lock user for 5 minuts to start posting photos", "Anti-bot")
+		pubsub.registerExternalVariable("chat", "easyBot", {type="boolean"}, true, "Easy check (single click). This is unsafe", "Anti-bot")
 	end
 	if core then  
 		core.addStartOption("Anti bot protection", "OwO", "nobot", function() return tr("antibot-start-desc") end )
@@ -300,7 +301,7 @@ function antibot.onNewChatParticipant(msg)
 		
 					local reason = nil
 					if chats[msg.chat.id].data.botEnforced then 
-						reason = tr("Chat rules")
+						reason = tr("antibot-reason")
 					else 
 						reason = users[msg.new_chat_participant.id].unsafe
 					end
@@ -558,6 +559,10 @@ function antibot.loadTranslation()
 
 	g_locale[LANG_BR]["antibot-notabot"] = "Não sou um bot"
 	g_locale[LANG_US]["antibot-notabot"] = "Im not a bot"
+
+
+	g_locale[LANG_BR]["antibot-reason"] = "Regras do chat"
+	g_locale[LANG_US]["antibot-reason"] = "Chat rules"
 
 
 	g_locale[LANG_BR]["antibot-approve"] = "(Admin only) Aprovar"
