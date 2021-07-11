@@ -56,6 +56,9 @@ function core.loadCommands()
 	addCommand( "lang"						, MODE_FREE,  getModulePath().."/lang.lua", 2, "core-lang-desc" )
 	addCommand( "invitelink"				, MODE_CHATADMS,  getModulePath().."/chat/link.lua", 2, "core-link-desc" )
 
+	addCommand( "inspect"				, MODE_ONLY_ADM,  getModulePath().."/chat/inspectadm.lua", 2, "core-inspect-desc" )
+	addCommand( "inspect"				, MODE_CHATADMS,  getModulePath().."/chat/inspectadm.lua", 2, "core-inspect-desc" )
+
 
 	
 	
@@ -346,7 +349,9 @@ end
 function core.onCallbackQueryReceive(msg)
 	local mode = msg.data:match("start:(.+)")
 
-	if mode and msg.message then
+	--print("EEEEE", cjson.encode(msg))
+
+	--[[if mode and msg.message then
 		
 		if not users[msg.from.id] then 
 			deploy_answerCallbackQuery(msg.id, "Internal error: "..tostring(msg.from.id), true)
@@ -396,7 +401,7 @@ function core.onCallbackQueryReceive(msg)
 			deploy_answerCallbackQuery(msg.id, "?ué")
 		end
 		return		 
-	end
+	end]]
 end
 
 

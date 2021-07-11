@@ -326,10 +326,12 @@ extension.onStickerReceive = function(msg)
 end
 
 
-extension.onScheduleWarning = function (amount)
+extension.onScheduleWarning = function (msgs)
 	local types = ""
-	for i,b in pairs(extension.scheduled) do 
+	local amount = 0
+	for i,b in pairs(msgs) do 
 		types = types .. tostring(b[1])..", "
+		amount = amount +1
 	end
 	say.admin("We have a total of "..amount.." scheduled messages <code>["..types.."]</code>")
 end
