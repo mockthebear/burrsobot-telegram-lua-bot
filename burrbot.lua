@@ -329,11 +329,15 @@ end
 extension.onScheduleWarning = function (msgs)
 	local types = ""
 	local amount = 0
+	local trace = ""
 	for i,b in pairs(msgs) do 
 		types = types .. tostring(b[1])..", "
 		amount = amount +1
+		trace = b[4]
 	end
-	say.admin("We have a total of "..amount.." scheduled messages <code>["..types.."]</code>")
+	if amount > 0 then
+		say.admin("We have a total of "..amount.." scheduled messages <code>["..types.."]</code>\n\nTrace:\n<code>"..trace.."</code>", "HTML")
+	end
 end
 
 extension.onTextReceive = function (msg)

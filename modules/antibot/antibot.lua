@@ -11,6 +11,8 @@ function antibot.load()
 		pubsub.registerExternalVariable("chat", "ignoreInviteLink", {type="boolean"}, true, "Captcha ignoring invite link", "Anti-bot")
 		pubsub.registerExternalVariable("chat", "no_nudes", {type="boolean"}, true, "Lock user for 5 minuts to start posting photos", "Anti-bot")
 		pubsub.registerExternalVariable("chat", "easyBot", {type="boolean"}, true, "Easy check (single click). This is unsafe", "Anti-bot")
+		pubsub.registerExternalVariable("chat", "purge_message", {type="boolean"}, true, "Purge join messages on ban", "Anti-bot")
+		pubsub.registerExternalVariable("chat", "antibot_duration", {type="number", default=120}, true, "Captcha duration", "Anti-bot")
 	end
 	if core then  
 		core.addStartOption("Anti bot protection", "OwO", "nobot", function() return tr("antibot-start-desc") end )
@@ -39,7 +41,7 @@ function antibot.sendCapthaCommand(targetChat, msg, chatid)
             end,  
             function(msg)
                 reply(tr("you failed"))
-            end, true)
+            end, true, true)
             if capteched and status == "check" then 
             	chats[targetChat]._tmp.checking[msg.from.id] = captchaid
             end
@@ -48,7 +50,7 @@ function antibot.sendCapthaCommand(targetChat, msg, chatid)
             	return
             end
             if users[msg.from.id].bot_procedure_check then 
-            	setEventDuration(users[msg.from.id].bot_procedure_check, 120)
+            	setEventDuration(users[msg.from.id].bot_procedure_check, chats[targetChat].data.antibot_duration or 120)
             	if users[msg.from.id].todelete then 
 
             	end
@@ -309,8 +311,9 @@ function antibot.onNewChatParticipant(msg)
 						
 					chats[msg.chat.id]._tmp.checking[msg.new_chat_participant.id] = true
 					
-					local eventId = scheduleEvent(120, antibot.botUserCheck, msg, msger.result.message_id) 
+					local eventId = scheduleEvent(chats[msg.chat.id].data.antibot_duration or 120, antibot.botUserCheck, msg, msger.result.message_id) 
 					users[msg.new_chat_participant.id].todelete = msger.result.message_id
+					users[msg.new_chat_participant.id].todelete_join = msg.message_id
 					users[msg.new_chat_participant.id].bot_procedure_check = eventId
 					print("Proc: "..eventId)
 					
@@ -458,22 +461,28 @@ function antibot.releaseBot(chat, user, callbackId)  --, id, fname, cb
         bot.sendMessage(user.id, tr("antibot-released"), "HTML",true,false, nil)
 
 		scheduleEvent(60, antibot.checkUserIsInChat, {chat=chat, from=user}) 
-		scheduleEvent(120, antibot.checkUserIsInChat, {chat=chat, from=user}) 
+		scheduleEvent(chats[chat.id].data.antibot_duration or 120, antibot.checkUserIsInChat, {chat=chat, from=user}) 
 
 		welcome.sendWelcomeMessage({chat=chat, from=user})
     end    
 
-    if users[user.id] and users[user.id].todelete then 
+    if users[user.id] then 
     	if users[user.id].todelete then 
     		stopEvent(users[user.id].bot_procedure_check)
     		users[user.id].bot_procedure_check = nil
+    		bot.deleteMessage(chat.id, users[user.id].todelete)
     	end
 
-        local del = bot.deleteMessage(chat.id, users[user.id].todelete)
-        if del and del.ok then
-        	users[user.id].todelete = nil
-        	SaveUser(user.id)
+    	if chats[chat.id].data.purge_message then 
+    		if users[user.id].todelete_join then
+    			bot.deleteMessage(chat.id, users[user.id].todelete_join)
+    		end 
     	end
+
+    	users[user.id].todelete_join = nil
+	    users[user.id].todelete = nil
+	    SaveUser(user.id)
+
     end
 end
 
@@ -524,8 +533,25 @@ function antibot.botUserCheck(msg, msg_delete)
 
         
 
-            say.admin('Banned '..formatUserHtml(msg)..' for beeing a bot on '..chats[msg.chat.id].title, "HTML", true, false, nil, kb)
+            say.admin('Banned '..formatUserHtml(msg)..' for beeing a bot on '..chats[msg.chat.id].title, "HTML", true, true, nil, kb)
             bot.sendMessage(antibot.channel,'Banned '..formatUserHtml(msg)..' for failing to prove its not a bot.', "HTML")
+
+            if users[msg.from.id].todelete then
+            	bot.deleteMessage(msg.chat.id, users[msg.from.id].todelete)
+            	users[msg.from.id].todelete = nil
+        	end
+            if chats[msg.chat.id].data.purge_message then 
+	    		if users[msg.from.id].todelete_join then
+	    			bot.deleteMessage(msg.chat.id, users[msg.from.id].todelete_join)
+	    		end 
+
+	    		scheduleEvent(30, function(sd, chid)
+	    			if sd and sd.result then 
+	    				bot.deleteMessage(chid,sd.result.message_id)
+	    			end
+	    		end, restMsg, msg.chat.id) 
+
+	    	end
            
         else 
             --bot.sendMessage(msg.chat.id,"User confirmed.")
@@ -546,7 +572,7 @@ function antibot.forceBotCheck(msg, reason)
         	msg.new_chat_participant = msg.from
         end
         users[msg.new_chat_participant.id].todelete = todeleteMessage.result.message_id
-        users[msg.from.id].bot_procedure_check =  scheduleEvent(120, antibot.botUserCheck, msg, todeleteMessage.result.message_id) 
+        users[msg.from.id].bot_procedure_check =  scheduleEvent(chats[msg.chat.id].data.antibot_duration or 120, antibot.botUserCheck, msg, todeleteMessage.result.message_id) 
         print("Proc: "..users[msg.from.id].bot_procedure_check)
     end  
 end

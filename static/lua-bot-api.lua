@@ -145,9 +145,9 @@ function getHttpConnection( makenew)
   return obj
 end
 
-function schedule_request(method, body)
+function schedule_request(method, body, location)
   M.scheduled[M.requestCounter] = {
-    method, body, os.time()+10
+    method, body, os.time()+10, location
   }
 end
 
@@ -216,8 +216,7 @@ function makeRequest(method, body_arg, forceHttpConn, disableSchedule)
   local bdjs = cjson.decode(res.body or '{"no response"}')
 
   if bdjs.error_code == 429 and not disableSchedule then 
-    print("scheduled~")
-    schedule_request(method, body_arg)
+    schedule_request(method, body_arg, debug.traceback())
   end
 
   local r = {
@@ -1232,7 +1231,7 @@ local function editMessageReplyMarkup(chat_id, message_id, inline_message_id, re
   request_body.inline_message_id = tostring(inline_message_id)
   request_body.reply_markup = reply_markup
 
-  local response = makeRequest("editMessageReplyMarkup",request_body)
+  local response = makeRequest("editMessageReplyMarkup",request_body, false, true)
 
   if (response.success == 1) then
     return response.body

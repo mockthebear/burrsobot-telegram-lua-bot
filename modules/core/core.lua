@@ -351,7 +351,7 @@ function core.onCallbackQueryReceive(msg)
 
 	--print("EEEEE", cjson.encode(msg))
 
-	--[[if mode and msg.message then
+	if mode and msg.message then
 		
 		if not users[msg.from.id] then 
 			deploy_answerCallbackQuery(msg.id, "Internal error: "..tostring(msg.from.id), true)
@@ -401,7 +401,7 @@ function core.onCallbackQueryReceive(msg)
 			deploy_answerCallbackQuery(msg.id, "?ué")
 		end
 		return		 
-	end]]
+	end
 end
 
 

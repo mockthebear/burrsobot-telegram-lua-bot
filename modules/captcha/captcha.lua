@@ -45,7 +45,7 @@ function captcha.loadCommands()
 	    	reply("aeeeee")
 	    end, function()
 	    	reply("ah nao mano :/")
-	    end)
+	    end, false, true)
 	end)
 end
 
@@ -82,7 +82,12 @@ function captcha.onTextReceive(msg)
 				captcha.sequences[captchaId] = nil
 				users[msg.from.id].captcha = nil
 				users[msg.from.id].is_human_limit_counter = 3
+				users[msg.from.id].human_counter_global = (users[msg.from.id].human_counter_global or 0) + 1
 				users[msg.from.id].is_human_timer = os.time() + 3600
+
+				if users[msg.from.id].human_counter_global >= 10 then 
+					--users[msg.from.id].is_human_permanent = true
+				end
 				SaveUser(msg.from.id)
 			elseif captcha.hasTTS and msg.text:find("^/audio") then
 				if not seq.audio then 
@@ -106,7 +111,7 @@ function captcha.onTextReceive(msg)
 				reply("You are in a captcha now. Cancel or solve please.")
 			elseif msg.text:find("^/recaptcha") then
 				if not seq.renew then 
-					local str, ok, photo = captcha.sendCaptcha(seq.chatid)
+					local str, ok, photo = captcha.sendCaptcha(seq.chatid, nil)
 					if ok then 
 						deploy_deleteMessage(seq.chatid, seq.msgId)
 						seq.msgId = photo.result.message_id
@@ -147,6 +152,9 @@ function captcha.startCaptchaProcedure(chat, userId, text, onSucces, onFail, ign
         	if users[userId].is_human_limit_counter > 0 then 
         		shouldCaptchaIt = not ignoreHuman
         	end
+       	end
+       	if users[userId].is_human_permanent then
+       		shouldCaptchaIt = not ignoreHuman
        	end
 
        	shouldCaptchaIt = true
@@ -241,7 +249,7 @@ function captcha.sendCaptcha(chat, text)
         say.admin("failed 4"..str.."-"..selectedFile)
         return str, false, {ok=false}
     end
-    local photoMessage = bot.sendPhoto(chat, "../cache/cap2.png", text..(captcha.hasTTS and tr("captcha-can-tts") or ""))
+    local photoMessage = bot.sendPhoto(chat, "../cache/cap2.png", text..(captcha.hasTTS and tr("captcha-can-tts") or ""), "HTML")
     if not photoMessage then 
     	say.admin("oh no = "..tostring(chat))
     	return str, false, {ok=false}
