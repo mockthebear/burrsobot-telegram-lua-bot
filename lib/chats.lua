@@ -37,6 +37,13 @@ function formatChatMessage(msg)
     end
 end
 
+function  checkCacheChatAdmins(msg)
+    local chatObj = chats[msg.chat.id]
+    if ((chatObj._tmp.adms_cache or 0 ) <= os.time()) then
+        cacheAdministrators(msg)
+    end
+end
+
 function cacheAdministrators(msgs)
     local adms = bot.getChatAdministrators(msgs.chat.id)
     if adms and adms.ok then
