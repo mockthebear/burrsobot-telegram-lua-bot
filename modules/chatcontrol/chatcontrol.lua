@@ -118,11 +118,15 @@ end
 
 function chatcontrol.loadCommands()
 	addCommand( {"chat"}		, MODE_FREE,  getModulePath().."/chat.lua", 2 , "chatcontrol-desc" )
+	addCommand( {"groupphoto"}		, MODE_FREE,  getModulePath().."/groupphoto.lua", 2 , "chatcontrol-groupphoto" )
 end
 
 function chatcontrol.loadTranslation()
 	g_locale[LANG_US]["chatcontrol-desc"] = "Search for a chat and display some info"
 	g_locale[LANG_BR]["chatcontrol-desc"] = "Busca um chat e mostra suas informaçoes"
+
+	g_locale[LANG_BR]["chatcontrol-groupphoto"] = "Define foto do chat"
+	g_locale[LANG_BR]["chatcontrol-groupphoto"] = "Define the chat photo"
 end
 
 
