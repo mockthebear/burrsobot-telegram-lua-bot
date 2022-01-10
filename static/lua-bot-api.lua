@@ -1599,6 +1599,9 @@ E.onChannelPost = onChannelPost
 local function onChannelEditPost(post) end
 E.onChannelEditPost = onChannelEditPost 
 
+local function onUpdateChatJoinRequest(post) end
+E.onUpdateChatJoinRequest = onUpdateChatJoinRequest 
+
 function onUpdateChatMember(post) end
 E.onUpdateChatMember = onUpdateChatMember
 
@@ -1607,7 +1610,6 @@ E.onDiceReceive = onDiceReceive
 
 function onPollReceive(post) end
 E.onPollReceive = onPollReceive
-
 
 function onDiceReceive(post) end
 E.onDiceReceive = onDiceReceive
@@ -1697,6 +1699,8 @@ local function parseUpdateCallbacks(update)
     E.onChannelPost(update.channel_post)
   elseif (update.edited_channel_post) then
     E.onChannelEditPost(update.edited_channel_post)
+  elseif (update.chat_join_request) then
+    E.onUpdateChatJoinRequest(update.chat_join_request)
   elseif (update.my_chat_member) then
     E.onUpdateChatMember(update.my_chat_member)
   else

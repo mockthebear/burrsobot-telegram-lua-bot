@@ -285,6 +285,21 @@ extension.onVideoReceive = function(msg)
 	
 end
 
+extension.onUpdateChatJoinRequest = function(msg)
+	if not formatMessage(msg) then 
+		return
+	end
+
+	logMessage(msg, "onUpdateChatJoinRequest")
+
+	if not runModulesMethod(msg, "onUpdateChatJoinRequest") then 
+		return
+	end
+	
+end
+
+extension
+
 extension.onVoiceReceive = function(msg)
 	if not formatMessage(msg) then 
 		return
