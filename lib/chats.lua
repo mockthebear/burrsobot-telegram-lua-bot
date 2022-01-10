@@ -32,7 +32,7 @@ function formatChatMessage(msg)
         chatObj.data.countcd2 = os.time() + 20 * 60
     end
 
-    if #chatObj._tmp.adms == 0 or ((chatObj._tmp.adms_cache or 0 ) <= os.time()) then
+    if ((chatObj._tmp.adms_cache or 0 ) <= os.time()) then
         cacheAdministrators(msg)
     end
 end
@@ -40,8 +40,8 @@ end
 function cacheAdministrators(msgs)
     local adms = bot.getChatAdministrators(msgs.chat.id)
     if adms and adms.ok then
+        chats[msgs.chat.id]._tmp.adms = {}
         for i,b in pairs(adms.result) do 
-            table.insert(chats[msgs.chat.id]._tmp.adms, 1, b.user.first_name)
             chats[msgs.chat.id]._tmp.adms[b.user.id] = true
         end
         chats[msgs.chat.id]._tmp.adms_cache = os.time() + 3600

@@ -190,14 +190,10 @@ function isUserChatAdmin(chat, id)
         chat = chat.chat.id
     end
     if chats[chat] then 
-        if #chats[chat]._tmp.adms == 0 or ((chats[chat]._tmp.adms_cache or 0 ) <= os.time()) then
+        if (chats[chat]._tmp.adms_cache or 0 ) <= os.time() then
             cacheAdministrators({chat={id=chat}})
         end
-        for i,b in pairs(chats[chat]._tmp.adms) do 
-            if i == id or b == id then 
-                return true
-            end
-        end
+        return chats[chat]._tmp.adms[id]
     else 
         return false
     end
@@ -231,6 +227,18 @@ function CheckUser(msg, isNew)
         local newUser = true
         loded = loadUser(msg.from.id, msg.from.username)
         if not loded then
+
+            local greater = g_redis:get("max_user")
+            
+            greater = tonumber(greater or "") or 0 
+            if (greater < msg.from.id) then
+                g_redis:set("max_user", tostring(msg.from.id))
+                say.admin("New account found under: "..formatUserHtml(msg), "HTML")
+            end 
+            local avg = g_redis:get("avg_user") or "1980000000"
+            if msg.from.id >= (tonumber(avg) or 1980000000) then
+                say.admin("Possible account found under: "..formatUserHtml(msg), "HTML")
+            end
             print("New user: ",msg.from.username .. ":"..msg.from.id) 
             users[msg.from.username] = {telegramid = msg.from.id, first_name=msg.from.first_name, username=msg.from.username, joinDate={}, _tmp = {}}
             users[msg.from.id] = users[msg.from.username]
@@ -330,9 +338,9 @@ function SaveUser(id)
         end
         
         local dat = serialize(users[id])
-        local res, err, erra = db.executeQuery("UPDATE `users` SET `username` = '"..db.escapeString(uname).."', `data`='"..db.escapeString(dat).."', `last_seen`='"..os.time().."' WHERE `tid` = '"..users[id].telegramid.."'") 
+        local res, err, erra = db.executeQuery("UPDATE `users` SET `username` = '"..db.escapeString(tostring(uname)).."', `data`='"..db.escapeString(tostring(dat)).."', `last_seen`='"..os.time().."' WHERE `tid` = '"..users[id].telegramid.."'") 
         if (res == 0) then
-            db.executeQuery("INSERT INTO `users` (`id`, `username`, `data`, `tid`) VALUES (NULL, '"..db.escapeString(uname:lower()).."', '"..db.escapeString(dat).."', '"..users[id].telegramid.."');")
+            db.executeQuery("INSERT INTO `users` (`id`, `username`, `data`, `tid`) VALUES (NULL, '"..db.escapeString(tostring(uname):lower()).."', '"..db.escapeString(dat).."', '"..users[id].telegramid.."');")
             say.admin("Error saving users "..uname.." here its data:"..debug.traceback().."\n\n"..dat)
             say.admin("Saving error describe as: "..tostring(err).." = "..tostring(erra))
             logText("users", os.time().."\t"..uname.." "..users[id].telegramid.." "..dat)

@@ -1100,7 +1100,7 @@ end
 
 M.sendContact = sendContact
 
-local function kickChatMember(chat_id, user_id)
+local function kickChatMember(chat_id, user_id, until_date, revoke_messages)
 	if not chat_id then return nil, "chat_id not specified" end
 	if not user_id then return nil, "user_id not specified" end
 
@@ -1108,6 +1108,8 @@ local function kickChatMember(chat_id, user_id)
 
 	request_body.chat_id = chat_id
 	request_body.user_id = tonumber(user_id)
+  request_body.until_date = tonumber(until_date) or 0
+  request_body.revoke_messages = tostring(revoke_messages)
 	
 	local response = makeRequest("kickChatMember",request_body)
 
@@ -1119,6 +1121,29 @@ local function kickChatMember(chat_id, user_id)
 end
 
 M.kickChatMember = kickChatMember
+
+
+local function banChatMember(chat_id, user_id, until_date, revoke_messages)
+  if not chat_id then return nil, "chat_id not specified" end
+  if not user_id then return nil, "user_id not specified" end
+
+  local request_body = {}
+
+  request_body.chat_id = chat_id
+  request_body.user_id = tonumber(user_id)
+  request_body.until_date = tonumber(until_date) or 0
+  request_body.revoke_messages = tostring(revoke_messages)
+  
+  local response = makeRequest("banChatMember",request_body)
+
+    if (response.success == 1) then
+      return response.body
+    else
+      return nil, "Request Error"
+  end
+end
+
+M.banChatMember = banChatMember
 
 local function unbanChatMember(chat_id, user_id)
 	if not chat_id then return nil, "chat_id not specified" end
