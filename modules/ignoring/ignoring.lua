@@ -26,12 +26,12 @@ function ignoring.getIgnored(chatid, id)
 	end
 	return chats[chatid].data.ignored[id] and true or false
 end
-function ignoring.setIgnoredGlobal(chatid, id, ignored)
+function ignoring.setIgnoredGlobal(id, ignored)
 	ignoring.ignored[id] = ignored and true or nil
 	ignoring.save()
 end
 
-function ignoring.getIgnoredGlobal(chatid, id)
+function ignoring.getIgnoredGlobal(id)
 	return ignoring.ignored[id] and true or false
 end
 
@@ -89,7 +89,10 @@ end
 function ignoring.loadTranslation()
 
 	g_locale[LANG_BR]["ignoring-user-state"] = "Usuário %s agora está %s! Para reverter use /ignore de novo"
-	g_locale[LANG_US]["ignoring-user-state"] = "Now user %s is %s! To toggle use the command /ignore again"
+	g_locale[LANG_US]["ignoring-user-state"] = "Now user %s is %s! To toggle use the command /ignore again"	
+
+	g_locale[LANG_BR]["ignoring-global-user-state"] = "Usuário %s agora está %s! Para reverter use /block de novo"
+	g_locale[LANG_US]["ignoring-global-user-state"] = "Now user %s is %s! To toggle use the command /block again"
 
 	g_locale[LANG_BR]["ignoring-unknown"] = "Usuário desconhecido. Use assim /ignore @username ou responder com o comando a mensagem"
 	g_locale[LANG_US]["ignoring-unknown"] = "Unknown user, use like this: /ignore @username or reply with the command the message of the user."
@@ -99,6 +102,11 @@ function ignoring.loadTranslation()
 
 	g_locale[LANG_US]["ignoring-released"] = "<b>released</b>"
 	g_locale[LANG_BR]["ignoring-released"] = "<b>liberado</b>"
+
+
+	g_locale[LANG_US]["ignoring-blocked"] = "<b>ignored</b>"
+	g_locale[LANG_BR]["ignoring-blocked"] = "<b>ignorado</b>"
+
 
 	g_locale[LANG_BR]["ignored-desc"] = "Faz com que o bot (eu), ignore um usuário nesse chat. Basta usar /ignore @username ou responder com o comando a mensagem"
 	g_locale[LANG_US]["ignored-desc"] = "Make me ignore a user in this chat. Just use /ignore @username or reply with the command the message of the user."

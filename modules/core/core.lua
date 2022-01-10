@@ -56,8 +56,8 @@ function core.loadCommands()
 	addCommand( "lang"						, MODE_FREE,  getModulePath().."/lang.lua", 2, "core-lang-desc" )
 	addCommand( "invitelink"				, MODE_CHATADMS,  getModulePath().."/chat/link.lua", 2, "core-link-desc" )
 
-	addCommand( "inspect"				, MODE_ONLY_ADM,  getModulePath().."/chat/inspectadm.lua", 2, "core-inspect-desc" )
-	addCommand( "inspect"				, MODE_CHATADMS,  getModulePath().."/chat/inspectadm.lua", 2, "core-inspect-desc" )
+	addCommand( "inspect"				, MODE_FREE,  getModulePath().."/chat/inspectadm.lua", 2, "core-inspect-desc" )
+	--addCommand( "inspect"				, MODE_CHATADMS,  getModulePath().."/chat/inspectadm.lua", 2, "core-inspect-desc" )
 
 
 	

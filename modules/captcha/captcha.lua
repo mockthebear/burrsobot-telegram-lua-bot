@@ -213,12 +213,13 @@ function captcha.sendCaptcha(chat, text)
     str = str:gsub("6", "8")
     text = text or "-"
     --Choose a random file
-    local file = io.popen("ls modules/captcha/media/") 
+    local file = assert(io.popen("ls modules/captcha/media/") )
     local s = file:read("*all")
     local parsed = {}
     for file in s:gmatch("(.-)\n") do 
     	parsed[#parsed+1] = file
     end
+    io.close(file)
 
     local selectedFile = parsed[math.random(1, #parsed)]
 

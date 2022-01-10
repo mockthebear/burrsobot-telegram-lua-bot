@@ -308,6 +308,9 @@ function antibot.onNewChatParticipant(msg)
 						reason = users[msg.new_chat_participant.id].unsafe
 					end
 					local msger,ttt = antibot.formatKickMessage(msg.chat.id,msg.new_chat_participant.id, msg.new_chat_participant.first_name, msg.new_chat_participant.originalUname, reason, g_msg.message_id)
+					if not msger.result then 
+						say.admin(Dump(msger))
+					end
 						
 					chats[msg.chat.id]._tmp.checking[msg.new_chat_participant.id] = true
 					

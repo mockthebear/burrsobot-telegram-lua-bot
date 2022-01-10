@@ -27,7 +27,7 @@ function OnCommand(user, msg, args)
 		end	
 	end
 
-	say.admin(Dump(user))
+	say.big(Dump(chats[cid]))
 
 
 	local keyb2 = {}

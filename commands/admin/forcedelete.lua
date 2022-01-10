@@ -1,16 +1,16 @@
 function OnCommand(msg, aaa, args)
 	if msg.reply_to_message then 
-		if #chats[msg.chat.id].adms == 0 then
+		if #chats[msg.chat.id]._tmp.adms == 0 then
 			cacheAdministrators(msg)
 		end
 		local adms = ""
-		for i,b in pairs(chats[msg.chat.id].adms) do 
+		for i,b in pairs(chats[msg.chat.id]._tmp.adms) do 
 			adms = adms .. (type(i) == "string" and ("@"..i..", ") or "")
 		end
 		local ret = bot.deleteMessage(msg.chat.id, msg.reply_to_message.message_id)
 
 		if not ret or not ret.ok then 
-			say("Cannot delete that message.")
+			say("Cannot delete that message: "..ret.description)
 			return
 		end
 		local mdata = parseMessageDataToStr(msg.reply_to_message)

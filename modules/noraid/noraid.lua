@@ -18,7 +18,8 @@ local noraid = {
 	},
 
 	evil_whitelist = {
-		[-1001138399875] = {[818904286] = true}
+		[-1001138399875] = {[818904286] = true},
+		['all'] = {[899097050] = true, [2096961757]=true}
 	},
 
 	channel = "@burrbanbot",
@@ -35,12 +36,13 @@ local noraid = {
 --[ONCE] runs when the load is finished
 function noraid.load()
 	if pubsub then
+		pubsub.registerExternalVariable("chat", "simple_noraid", {type="boolean"}, true, "Ban only when the user joins", "Anti-raid")
 		pubsub.registerExternalVariable("chat", "noraid_agressive", {type="boolean"}, true, "Make noraid more agressive", "Anti-raid")
 		pubsub.registerExternalVariable("chat", "noraid", {type="boolean"}, true, "Anti raid on/off", "Anti-raid")
 		pubsub.registerExternalVariable("chat", "autoban_raid", {type="boolean"}, true, "Auto ban foreign bots", "Anti-raid")
 
-		pubsub.registerExternalVariable("chat", "raid_join_interval", {type="number"}, true, "Amount of time in seconds between each join to be considered a raid", "Anti-raid")
-		pubsub.registerExternalVariable("chat", "raid_join_count", {type="number"}, true, "Amount of sequential joins to be considered raid", "Anti-raid")
+		pubsub.registerExternalVariable("chat", "raid_join_interval", {type="number",default=60}, true, "Amount of time in seconds between each join to be considered a raid", "Anti-raid")
+		pubsub.registerExternalVariable("chat", "raid_join_count", {type="number", default=4}, true, "Amount of sequential joins to be considered raid", "Anti-raid")
 		pubsub.registerExternalVariable("chat", "disable_bot_raid", {type="boolean"}, true, "Disable bot raid", "Anti-raid")
 	end
 	--
@@ -169,7 +171,7 @@ function noraid.checkUserMessage(msg, countMessage)
 
 			if noraid.isEvilWhitelist(msg) then 
 				print("User is whitelisted")
-				return KILL_EXECUTION, false
+				return nil, false
 			end
 
 			if users[msg.from.id].noraid_banned then 
@@ -230,7 +232,7 @@ function noraid.checkUserMessage(msg, countMessage)
 								SaveUser(msg.from.id)
 
 								if noraid.chat then
-									bot.sendMessage(noraid.chat, "<b>[NORAID]</b>\n\nRaid detected from "..formatUserHtml(msg) .." at chat "..msg.chat.title:htmlFix(), "HTML")
+									bot.sendMessage(noraid.chat, "<b>[NORAID]</b>\n\nRaid detected from "..formatUserHtml(msg) .." (id: "..msg.from.id..") at chat "..msg.chat.title:htmlFix(), "HTML")
 								end
 
 								for i,b in pairs(opCount) do
@@ -251,8 +253,18 @@ function noraid.checkUserMessage(msg, countMessage)
 			end
 			return nil, false
 		else 
-			if users[msg.from.id].noraid_banned then 
-				return KILL_EXECUTION, false
+			if users[msg.from.id].noraid_banned then
+				if chatObj.simple_noraid then
+					return KILL_EXECUTION, false 
+				else 
+					if chatObj.lastRaidBan ~= msg.from.id then
+						noraid.TakeAction(msg)
+						chatObj.lastRaidBan = msg.from.id
+					end
+					bot.deleteMessage(msg.chat.id, msg.message_id)
+
+					return KILL_EXECUTION, false
+				end
 			end
 		end
 
@@ -279,6 +291,10 @@ function noraid.onNewChatParticipant(msg)
 	local autoban = false
 
 	local fromLink = msg.actor.id ~= msg.from.id
+
+	if  noraid.isEvilWhitelist(msg) then 
+		return nil
+	end
 
 	--Check if the user is marked as a raider~
 	if noraid.staticRaiders[msg.from.username:lower()] or users[msg.from.id].noraid_banned or noraid.staticRaiders[tostring(msg.from.id)]  then 
@@ -367,11 +383,11 @@ end
 function noraid.TakeAction(msg, whatIs, silent)
 	whatIs = whatIs or "raider"
 	users[msg.from.id].noraid_banned = true
-	local ret = bot.kickChatMember(msg.chat.id, msg.from.id, 0)
+	local ret = bot.banChatMember(msg.chat.id, msg.from.id, 0, true)
 	if not ret or not ret.ok then 
 		--If returns nil (connection down)
 		ret = ret or {description="nil message"}
-		say.html(tr("noraid-action-fail", formatUserHtml(msg), whatIs, ret.description))
+		say.html(tr("noraid-action-fail", formatUserHtml(msg), whatIs, ret.description, msg.from.id))
 		--Send message in the channel
 		if noraid.channel and tostring(noraid.channel):len() > 0 then 
 			deploy_sendMessage(noraid.channel, tr("noraid-action-public-fail", formatUserHtml(msg), whatIs, ret.description) , "HTML")
@@ -386,18 +402,18 @@ function noraid.TakeAction(msg, whatIs, silent)
 
 	else  
 
-		local said = say.html(tr("noraid-action-success", formatUserHtml(msg), whatIs))
+		local said = say.html(tr("noraid-action-success", formatUserHtml(msg), whatIs, msg.from.id))
 		
 		if noraid.channel and tostring(noraid.channel):len() > 0 then 
 			deploy_sendMessage(noraid.channel, tr("noraid-action-public-success", formatUserHtml(msg), whatIs) , "HTML")
 		end
 		--Send message to the bot admin
 		if noraid.warnBotAdmin then
-			say.admin("<b>[NORAID]</b>\n\nBanned "..formatUserHtml(msg) .. "("..whatIs..") at chat "..msg.chat.title:htmlFix() , "HTML")
+			say.admin("<b>[NORAID]</b>\n\nBanned "..formatUserHtml(msg) .. "("..whatIs..") (id: "..msg.from.id..") at chat "..msg.chat.title:htmlFix() , "HTML")
 		end
 
 		if noraid.chat then
-			bot.sendMessage(noraid.chat, "<b>[NORAID]</b>\n\nBanned "..formatUserHtml(msg) .. "("..whatIs..") at chat "..msg.chat.title:htmlFix(), "HTML")
+			bot.sendMessage(noraid.chat, "<b>[NORAID]</b>\n\nBanned "..formatUserHtml(msg) .. "("..whatIs..") (id: "..msg.from.id..") at chat "..msg.chat.title:htmlFix(), "HTML")
 		end 
 
 		if silent then
@@ -413,16 +429,16 @@ end
 
 
 function noraid.loadTranslation()
-	g_locale[LANG_US]["noraid-action-fail"] = "<b>[NORAID]</b>\n\n❗️❗️❗️❗️Attention, user %s was marked in noraid as a %s but i failed to ban him.❗️❗️❗️❗️\n\nReason:<code>%s</code>"
-	g_locale[LANG_BR]["noraid-action-fail"] = "<b>[NORAID]</b>\n\n❗️❗️❗️❗️Attention, user %s was marked in noraid as a %s but i failed to ban him.❗️❗️❗️❗️\n\nReason:<code>%s</code>"
+	g_locale[LANG_US]["noraid-action-fail"] = "<b>[NORAID]</b>\n\n❗️❗️❗️❗️Attention, user %s was marked in noraid as a %s but i failed to ban him.❗️❗️❗️❗️\n\nReason:<code>%s</code> User id: %d"
+	g_locale[LANG_BR]["noraid-action-fail"] = "<b>[NORAID]</b>\n\n❗️❗️❗️❗️Attention, user %s was marked in noraid as a %s but i failed to ban him.❗️❗️❗️❗️\n\nReason:<code>%s</code> User id: %d"
 
 
 	g_locale[LANG_US]["noraid-action-public-fail"] = "<b>[NORAID]</b>\n\n❗️❗️❗️❗️Failed to ban %s which was marked as a %s ❗️❗️❗️❗️\nReason: <code>%s</code>"
 	g_locale[LANG_BR]["noraid-action-public-fail"] = "<b>[NORAID]</b>\n\n❗️❗️❗️❗️Failed to ban %s which was marked as a %s ❗️❗️❗️❗️\nReason: <code>%s</code>"
 
 
-	g_locale[LANG_US]["noraid-action-success"] = "<b>[NORAID]</b>\n\n❗️❗️❗️❗️Banned user %s marked as %s❗️❗️❗️❗️"
-	g_locale[LANG_BR]["noraid-action-success"] = "<b>[NORAID]</b>\n\n❗️❗️❗️❗️Banned user %s marked as %s❗️❗️❗️❗️"	
+	g_locale[LANG_US]["noraid-action-success"] = "<b>[NORAID]</b>\n\n❗️❗️❗️❗️Banned user %s marked as %s❗️❗️❗️❗️ User id: %d"
+	g_locale[LANG_BR]["noraid-action-success"] = "<b>[NORAID]</b>\n\n❗️❗️❗️❗️Banned user %s marked as %s❗️❗️❗️❗️ User id: %d"	
 
 	g_locale[LANG_US]["noraid-botraid"] = "<b>[NORAID]</b>\n\n❗️❗️❗️❗️Bot raid detected❗️❗️❗️❗️"
 	g_locale[LANG_BR]["noraid-botraid"] = "<b>[NORAID]</b>\n\n❗️❗️❗️❗️Bot raid detected❗️❗️❗️❗️"
@@ -450,6 +466,11 @@ function noraid.isEvilWhitelist(msg)
 	if msg.chat then 
 		if noraid.evil_whitelist[msg.chat.id] then 
 			if noraid.evil_whitelist[msg.chat.id][msg.from.id] then 
+				return true
+			end
+		end
+		if noraid.evil_whitelist['all'] then 
+			if noraid.evil_whitelist['all'][msg.from.id] then 
 				return true
 			end
 		end

@@ -153,12 +153,15 @@ function welcome.sendWelcomeMessage(msg, kb, append)
         return bot.sendSticker(msg.chat.id, stckrId, false, msg.message_id, kb)
     else
         local ret = bot.sendMessage(msg.chat.id, text, "HTML", true, false, msg.message_id, kb)
-
-        if not chats[msg.chat.id].data.welcome and not kb then
-            scheduleEvent(60, function()
-                bot.deleteMessage(msg.chat.id, ret.result.message_id)
-            end)  
-        end
+        if ret.result then
+	        if not chats[msg.chat.id].data.welcome and not kb then
+	            scheduleEvent(60 * 4, function()
+	                bot.deleteMessage(msg.chat.id, ret.result.message_id)
+	            end)  
+	        end
+	    else 
+	    	say.admin("ERr on welcome send: "..JSON:encode(ret))
+	    end
 
         return ret
     end
