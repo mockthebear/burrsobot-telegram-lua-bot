@@ -260,14 +260,14 @@ M.getUpdatesCount = getUpdatesCount
 
 
 local function getRequestDuration()
-	if #M.requests == 0 then 
-		return -1
-	end
-	local avg = 0
-	for i=1, #M.requests do 
-		avg = avg + M.requests[i]
-	end
-	return avg / #M.requests
+  if #M.requests == 0 then 
+    return -1
+  end
+  local avg = 0
+  for i=1, #M.requests do 
+    avg = avg + M.requests[i]
+  end
+  return avg / #M.requests
 end
 
 M.getRequestDuration = getRequestDuration
@@ -463,8 +463,8 @@ local function setChatPhoto(chat_id, filename)
   if not photo_file then return false, "Error, no such file" end
 
   request_body["photo"] = {
-   	filename = filename,
-   	data = photo_file:read("*a"),
+    filename = filename,
+    data = photo_file:read("*a"),
   }
 
   photo_file:close()
@@ -480,6 +480,139 @@ end
 
 M.setChatPhoto = setChatPhoto
 
+
+local function banChatSenderChat(chat_id, message_id)
+
+   local request_body = {}
+
+  request_body.chat_id = chat_id
+  request_body.sender_chat_id = sender_chat_id
+
+
+  local response = makeRequest("banChatSenderChat",request_body)
+
+  if (response.success == 1) then
+    return response.body
+  else
+    return nil, "Request Error"
+  end
+end
+
+M.banChatSenderChat = banChatSenderChat
+
+local function unbanChatSenderChat(chat_id, message_id)
+
+   local request_body = {}
+
+  request_body.chat_id = chat_id
+  request_body.sender_chat_id = sender_chat_id
+
+
+  local response = makeRequest("unbanChatSenderChat",request_body)
+
+  if (response.success == 1) then
+    return response.body
+  else
+    return nil, "Request Error"
+  end
+end
+
+M.unbanChatSenderChat = unbanChatSenderChat
+
+local function approveChatJoinRequest(chat_id, message_id)
+
+   local request_body = {}
+
+  request_body.chat_id = chat_id
+  request_body.user_id = user_id
+
+
+  local response = makeRequest("approveChatJoinRequest",request_body)
+
+  if (response.success == 1) then
+    return response.body
+  else
+    return nil, "Request Error"
+  end
+end
+
+M.approveChatJoinRequest = approveChatJoinRequest
+
+local function declineChatJoinRequest(chat_id, message_id)
+
+   local request_body = {}
+
+  request_body.chat_id = chat_id
+  request_body.user_id = user_id
+
+
+  local response = makeRequest("declineChatJoinRequest",request_body)
+
+  if (response.success == 1) then
+    return response.body
+  else
+    return nil, "Request Error"
+  end
+end
+
+local function setMyCommands(chat_id, message_id)
+
+   local request_body = {}
+
+  request_body.commands = commands
+  request_body.scope = scope
+  request_body.language_code = language_code
+
+
+  local response = makeRequest("setMyCommands",request_body)
+
+  if (response.success == 1) then
+    return response.body
+  else
+    return nil, "Request Error"
+  end
+end
+
+M.setMyCommands = setMyCommands
+
+
+local function deleteMyCommands(chat_id, message_id)
+
+   local request_body = {}
+
+  request_body.scope = scope
+  request_body.language_code = language_code
+
+
+  local response = makeRequest("deleteMyCommands",request_body)
+
+  if (response.success == 1) then
+    return response.body
+  else
+    return nil, "Request Error"
+  end
+end
+
+M.deleteMyCommands = deleteMyCommands
+
+local function getMyCommands(chat_id, message_id)
+
+   local request_body = {}
+
+  request_body.scope = scope
+  request_body.language_code = language_code
+
+
+  local response = makeRequest("getMyCommands",request_body)
+
+  if (response.success == 1) then
+    return response.body
+  else
+    return nil, "Request Error"
+  end
+end
+
+M.getMyCommands = getMyCommands
 
 
 local function unpinChatMessage(chat_id, message_id)
@@ -1101,22 +1234,22 @@ end
 M.sendContact = sendContact
 
 local function kickChatMember(chat_id, user_id, until_date, revoke_messages)
-	if not chat_id then return nil, "chat_id not specified" end
-	if not user_id then return nil, "user_id not specified" end
+  if not chat_id then return nil, "chat_id not specified" end
+  if not user_id then return nil, "user_id not specified" end
 
-	local request_body = {}
+  local request_body = {}
 
-	request_body.chat_id = chat_id
-	request_body.user_id = tonumber(user_id)
+  request_body.chat_id = chat_id
+  request_body.user_id = tonumber(user_id)
   request_body.until_date = tonumber(until_date) or 0
   request_body.revoke_messages = tostring(revoke_messages)
-	
-	local response = makeRequest("kickChatMember",request_body)
+  
+  local response = makeRequest("kickChatMember",request_body)
 
-	  if (response.success == 1) then
-	    return response.body
-	  else
-	    return nil, "Request Error"
+    if (response.success == 1) then
+      return response.body
+    else
+      return nil, "Request Error"
   end
 end
 
@@ -1146,20 +1279,20 @@ end
 M.banChatMember = banChatMember
 
 local function unbanChatMember(chat_id, user_id)
-	if not chat_id then return nil, "chat_id not specified" end
-	if not user_id then return nil, "user_id not specified" end
+  if not chat_id then return nil, "chat_id not specified" end
+  if not user_id then return nil, "user_id not specified" end
 
-	local request_body = {}
+  local request_body = {}
 
-	request_body.chat_id = chat_id
-	request_body.user_id = tonumber(user_id) 
-	
-	local response = makeRequest("unbanChatMember",request_body)
+  request_body.chat_id = chat_id
+  request_body.user_id = tonumber(user_id) 
+  
+  local response = makeRequest("unbanChatMember",request_body)
 
-	  if (response.success == 1) then
-	    return response.body
-	  else
-	    return nil, "Request Error"
+    if (response.success == 1) then
+      return response.body
+    else
+      return nil, "Request Error"
   end
 end
 
@@ -1167,29 +1300,29 @@ M.unbanChatMember = unbanChatMember
 
 local function answerCallbackQuery(callback_query_id, text, show_alert, cache_time, url)
 
-	if not callback_query_id then return nil, "callback_query_id not specified" end
+  if not callback_query_id then return nil, "callback_query_id not specified" end
 
-	local request_body = {}
+  local request_body = {}
 
-	request_body.callback_query_id = tostring(callback_query_id)
-	request_body.text = text
-	request_body.show_alert = tostring(show_alert)
-	request_body.cache_time = tostring(cache_time)
+  request_body.callback_query_id = tostring(callback_query_id)
+  request_body.text = text
+  request_body.show_alert = tostring(show_alert)
+  request_body.cache_time = tostring(cache_time)
   request_body.url = url
-	
-	local response = makeRequest("answerCallbackQuery",request_body, nil, true)
+  
+  local response = makeRequest("answerCallbackQuery",request_body, nil, true)
 
-	  if (response.success == 1) then
-	    return response.body
-	  else
-	    return nil, "Request Error"
+    if (response.success == 1) then
+      return response.body
+    else
+      return nil, "Request Error"
   end
 end
 
 M.answerCallbackQuery = answerCallbackQuery
 
 local function editMessageText(chat_id, message_id, inline_message_id, text, parse_mode, disable_web_page_preview, reply_markup)
-	
+  
   if not chat_id and not inline_message_id then return nil, "chat_id not specified" end
   if not message_id and not inline_message_id then return nil, "message_id not specified" end
   if not inline_message_id and not (chat_id and message_id) then return nil, "inline_message_id not specified" end
@@ -1561,9 +1694,9 @@ local function parseUpdateCallbacks(update)
   elseif (update.callback_query) then
     E.onCallbackQueryReceive(update.callback_query)
   elseif (update.channel_post) then
-  	E.onChannelPost(update.channel_post)
+    E.onChannelPost(update.channel_post)
   elseif (update.edited_channel_post) then
-  	E.onChannelEditPost(update.edited_channel_post)
+    E.onChannelEditPost(update.edited_channel_post)
   elseif (update.my_chat_member) then
     E.onUpdateChatMember(update.my_chat_member)
   else
