@@ -169,18 +169,24 @@ function noraid.checkUserMessage(msg, countMessage)
 
 		if enabled then
 
-			if noraid.isEvilWhitelist(msg) then 
+
+			local opUser,which = getEntity(msg)
+			if which == "chat" then 
+				return nil, false
+			end
+
+			if noraid.isEvilWhitelist(msg, opUser) then 
 				print("User is whitelisted")
 				return nil, false
 			end
 
-			if users[msg.from.id].noraid_banned then 
+
+			if opUser.noraid_banned then 
 				deploy_deleteMessage(msg.chat.id, msg.message_id)
 				return KILL_EXECUTION, false
 			end
 
 
-			local opUser = users[msg.from.id]
 			msg.date = tonumber(msg.date) 
 
 
@@ -253,7 +259,7 @@ function noraid.checkUserMessage(msg, countMessage)
 			end
 			return nil, false
 		else 
-			if users[msg.from.id].noraid_banned then
+			if getEntity(msg).noraid_banned then
 				if chatObj.simple_noraid then
 					return KILL_EXECUTION, false 
 				else 
@@ -269,7 +275,7 @@ function noraid.checkUserMessage(msg, countMessage)
 		end
 
 	else 
-		if users[msg.from.id].noraid_banned then 
+		if getEntity(msg).noraid_banned then 
 			return KILL_EXECUTION, false
 		end
 	end
@@ -292,17 +298,23 @@ function noraid.onNewChatParticipant(msg)
 
 	local fromLink = msg.actor.id ~= msg.from.id
 
-	if  noraid.isEvilWhitelist(msg) then 
+	local entity,which = getEntity(msg)
+	if which == "chat" then 
+		return nil, false
+	end
+
+	if  noraid.isEvilWhitelist(msg, entity) then 
 		return nil
 	end
 
+
 	--Check if the user is marked as a raider~
-	if noraid.staticRaiders[msg.from.username:lower()] or users[msg.from.id].noraid_banned or noraid.staticRaiders[tostring(msg.from.id)]  then 
-		users[msg.from.id].noraid_banned = true
-		if noraid.staticRaiders[msg.from.username:lower()] or noraid.staticRaiders[tostring(msg.from.id)] then
-			say.admin("<b>[NORAID]</b>\n\nFound: "..(msg.from.username or msg.from.id), "HTML")
-			noraid.staticRaiders[msg.from.username:lower()] = nil
-			noraid.staticRaiders[tostring(msg.from.id)] = nil
+	if noraid.staticRaiders[entity.username:lower()] or getEntity(msg).noraid_banned or noraid.staticRaiders[tostring(entity.id)]  then 
+		entity.noraid_banned = true
+		if noraid.staticRaiders[entity.username:lower()] or noraid.staticRaiders[tostring(entity.id)] then
+			say.admin("<b>[NORAID]</b>\n\nFound: "..(entity.username or entity.id), "HTML")
+			noraid.staticRaiders[entity.username:lower()] = nil
+			noraid.staticRaiders[tostring(entity.id)] = nil
 			noraid.save()
 		end
 
@@ -313,7 +325,7 @@ function noraid.onNewChatParticipant(msg)
 			noraid.WarnDisabled(msg, whatIs)
 			
 		end
-		SaveUser(msg.from.id)
+		SaveEntity(entity.id)
 		return KILL_EXECUTION
 	end
 
@@ -353,7 +365,7 @@ function noraid.onNewChatParticipant(msg)
 	end
 	SaveChat(msg.chat.id)
 
-	local isForeignBot = chatObj.botProtection and (isChineseBot(msg.from.first_name) or isArabicBot(msg.from.first_name) or isRussianBot(msg.from.first_name)) 
+	local isForeignBot = chatObj.botProtection and (isChineseBot(entity.first_name) or isArabicBot(entity.first_name) or isRussianBot(entity.first_name)) 
 	if isForeignBot then
 		if isForeignBot then 
 			local whatIs = noraid.noraid_bannedReason(msg) 
@@ -462,15 +474,15 @@ end
 
 
 
-function noraid.isEvilWhitelist(msg)
+function noraid.isEvilWhitelist(msg, opUser)
 	if msg.chat then 
 		if noraid.evil_whitelist[msg.chat.id] then 
-			if noraid.evil_whitelist[msg.chat.id][msg.from.id] then 
+			if noraid.evil_whitelist[msg.chat.id][opUser.id] then 
 				return true
 			end
 		end
 		if noraid.evil_whitelist['all'] then 
-			if noraid.evil_whitelist['all'][msg.from.id] then 
+			if noraid.evil_whitelist['all'][opUser.id] then 
 				return true
 			end
 		end
