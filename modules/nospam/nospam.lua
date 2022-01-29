@@ -201,14 +201,18 @@ function nospam.apply_spam_action(msg, action)
         	say(tr("nospam-fail-ban", res.description))
         end
     elseif action == 'raid' then 
-        local res = bot.restrictChatMember(msg.chat.id, msg.from.id, -1, false, false, false, false)
-        if not res.ok then 
-        	say(tr("nospam-fail-ban", res.description))
+        if not users[msg.from.id].nospam_raider then
+
+            local res = bot.restrictChatMember(msg.chat.id, msg.from.id, -1, false, false, false, false)
+            if not res.ok then 
+            	say(tr("nospam-fail-ban", res.description))
+            end
+            users[msg.from.id].nospam_raider = true
+            users[msg.from.id].raider = true
+            if nospam.channel and #tostring(nospam.channel) > 4 then
+            	deploy_sendMessage("@burrbanbot","❗️❗️❗️❗️RAIDER detected ("..formatUserHtml(msg)..")❗️❗️❗️❗️", "HTML")
+        	end
         end
-        users[msg.from.id].raider = true
-        if nospam.channel and tostring(nospam.channel) > 4 then
-        	deploy_sendMessage("@burrbanbot","❗️❗️❗️❗️RAIDER detected ("..formatUserHtml(msg)..")❗️❗️❗️❗️", "HTML")
-    	end
     end
     local str = ""
     local adms = bot.getChatAdministrators(msg.chat.id)
