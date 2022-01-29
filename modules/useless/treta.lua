@@ -49,10 +49,8 @@ function OnCommand(user, msg, args)
 		return
 	end
 	if args[2] == "gen" or args[2] == "g"  then 
-		if #chats[user.chat.id].adms == 0 then
-			cacheAdministrators(user)
-		end
-		if chats[user.chat.id].adms[user.from.username] then
+
+		if isUserChatAdmin(user.chat.id, user.from.id)  then
 			chats[user.chat.id].data.lastTreta = chats[user.chat.id].data.lastTreta or os.time()
 			say(tr("Gerando contador..."))
 			local ret = say_markdown(gentTretaMessage(tonumber(chats[user.chat.id].data.lastTreta)))
