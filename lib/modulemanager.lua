@@ -171,6 +171,7 @@ function runModulesMethod(msg, method, ...)
 						end
 					else 
 						say.admin("Error on call ["..method.."] at module ["..libname.."]: "..ret)
+						say.admin("Message:<code>"..cjson.encode(msg).."</code>")
 					end
 				end
 			end

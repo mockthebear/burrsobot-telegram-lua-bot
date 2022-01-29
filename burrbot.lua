@@ -10,6 +10,7 @@ chats = {}
 configs = {}
 admins = {}
 users = {}
+channels = {}
 schedule = {}
 g_startup = os.time()
 
@@ -43,7 +44,9 @@ print("Loading bot libs")
 dofile("lib/configs.lua")
 dofile("lib/locale.lua")
 dofile("lib/users.lua")
+dofile("lib/channels.lua")
 dofile("lib/chats.lua")
+dofile("lib/entity.lua")
 dofile("lib/botlib.lua")
 dofile("lib/saying.lua")
 dofile("lib/modulemanager.lua")
@@ -285,6 +288,7 @@ extension.onVideoReceive = function(msg)
 	
 end
 
+
 extension.onUpdateChatJoinRequest = function(msg)
 	if not formatMessage(msg) then 
 		return
@@ -297,8 +301,6 @@ extension.onUpdateChatJoinRequest = function(msg)
 	end
 	
 end
-
-extension
 
 extension.onVoiceReceive = function(msg)
 	if not formatMessage(msg) then 
@@ -356,8 +358,9 @@ extension.onScheduleWarning = function (msgs)
 end
 
 extension.onTextReceive = function (msg)
+	 
 	if msg.chat.type == "private" then 
-		print(msg.from.id.." "..msg.from.first_name..": "..msg.text)
+		print((msg.chat.type ~= "private" and ("["..msg.chat.title.."] ")   or " ") ..msg.from.id.." "..msg.from.first_name..": "..msg.text)
 	end
 
 	if not formatMessage(msg) then 

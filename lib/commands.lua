@@ -88,7 +88,7 @@ function listCommandsContext(msg, groups)
 	groups = {MODE_CHATADMS, MODE_ONLY_ADM, MODE_FREE, MODE_NSFW, msg.chat.id}
 	local cmd = {}
 
-	local isChatAdmin = isUserChatAdmin(msg.chat.id, msg.from.id)
+	local isChatAdmin = isEntityChatAdmin(msg)
 	local isBotAdmin = isUserBotAdmin(msg.from.id)
 	
 	local lang = g_lang
@@ -267,15 +267,12 @@ function findCommand(msg)
             end
         end
 
-        local isBotAdmin = false
-        for a,c in pairs(admins) do 
-            if msg.from.id == tonumber(c) then 
-                isBotAdmin = true
-                break
-            end
-        end
+        local entity, which = getEntity(msg)
+
+        local isBotAdmin = which == "user" and isUserBotAdmin(entity.id)
+       
         local chatAdminCheck = targetChat == msg.chat.id and msg.chat.id or targetChat
-        local isChatAdm = isUserChatAdmin(chatAdminCheck, msg.from.id)
+        local isChatAdm = isEntityChatAdmin(msg, chatAdminCheck)
 
         for index ,b in pairs(g_commands) do 
             local usedWord = ""
@@ -293,8 +290,8 @@ function findCommand(msg)
                 if b.mode == MODE_ONLY_ADM then 
                     canRun = isBotAdmin
                     if not canRun then 
-                        if not users[msg.from.id]._tmp.warndc or users[msg.from.id]._tmp.warndc <= os.time() then 
-                            users[msg.from.id]._tmp.warndc = os.time()+120
+                        if not entity._tmp.warndc or entity._tmp.warndc <= os.time() then 
+                            entity._tmp.warndc = os.time()+120
                             reply.delete(tr("default-command-botadmin"), 15, "HTML" )
                         end
                     end
@@ -368,7 +365,6 @@ function findCommand(msg)
 	                    	chats[msg.chat.id].data.last_command_use = os.time()
 	                    end
 	                    if type(b.path) == 'function' then
-	                        --local ret,err = pcall(b.path, user, text, strArr)
 	                        local success,err = pcall(b.path, msg, text, strArr)
 	                            
 	                        b.rcold = false

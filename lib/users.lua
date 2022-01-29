@@ -154,7 +154,7 @@ function loadUser(id, username)
                 end
 
                 --print("Assigned as: "..username.." = ".. targetId)
-                unse._tmp = {}
+                unse._tmp = {type="user"}
                 unse.telegramid = targetId 
                 users[username] = unse
                 users[targetId] = unse
@@ -180,19 +180,36 @@ function loadUser(id, username)
     end
     return obj
 end
+ 
+
 
 function isUserChatAdmin(chat, id)
-    if id == 777000 then 
-        return true
+    if not id then 
+        local msg = chat 
+        if not msg.chat then 
+            return false
+        end
+        id = msg.from.id
+        if not msg.from or not msg.from.id then 
+            if msg.sender_chat then 
+                if msg.sender_chat.id == msg.chat.id then 
+                    return true
+                end
+                return false
+            else 
+                return false
+            end
+        else 
+            return isUserChatAdmin(msg.from.id, msg.from.id)
+        end
+
     end
+
     if type(chat) == "table" then 
         id = chat.from.id
         chat = chat.chat.id
     end
     if chats[chat] then 
-        if (chats[chat]._tmp.adms_cache or 0 ) <= os.time() then
-            cacheAdministrators({chat={id=chat}})
-        end
         return chats[chat]._tmp.adms[id]
     else 
         return false
@@ -210,6 +227,10 @@ end
 
 
 function CheckUser(msg, isNew)
+    if msg.sender_chat then 
+        return true
+    end
+
     if not msg.from then 
         return true
     end
@@ -240,7 +261,7 @@ function CheckUser(msg, isNew)
                 say.admin("Possible account found under: "..formatUserHtml(msg), "HTML")
             end
             print("New user: ",msg.from.username .. ":"..msg.from.id) 
-            users[msg.from.username] = {telegramid = msg.from.id, first_name=msg.from.first_name, username=msg.from.username, joinDate={}, _tmp = {}}
+            users[msg.from.username] = {telegramid = msg.from.id, first_name=msg.from.first_name, username=msg.from.username, joinDate={}, _tmp = {type="user"}, discovery=os.time()}
             users[msg.from.id] = users[msg.from.username]
             
             if msg.chat and chats[msg.chat.id] then
@@ -332,7 +353,7 @@ function SaveUser(id)
         end
 
         for i,b in pairs(users[id]) do
-            if i ~= "_tmp" then
+            if i ~= "_tmp" and i ~= "_type" then
                 g_redis:hset("user:"..id, i, tostring(b))
             end
         end

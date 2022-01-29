@@ -11,7 +11,11 @@ MODE_CHATADMS = 4
 
 function formatMessage(msg)
 
-    if msg.from and msg.from.id == 777000 then 
+    if not msg.from and msg.sender_chat and msg.sender_chat == msg.chat.id then 
+        msg.from = {id=777000, first_name = msg.sender_chat.title}
+    end
+
+    if not msg.from  then 
         return false
     end
 
@@ -22,10 +26,12 @@ function formatMessage(msg)
         msg.targeted_to_bot = msg.chat.type == "private"
     end
 
-    msg.from.originalUname = msg.from.username
+    if msg.from then
+        msg.from.originalUname = msg.from.username
 
-    msg.from.username2 = (msg.from.username or tostring(msg.from.first_name)..(msg.from.id))
-    msg.from.username = (msg.from.username or tostring(msg.from.first_name)..(msg.from.id)):lower()
+        msg.from.username2 = (msg.from.username or tostring(msg.from.first_name)..(msg.from.id))
+        msg.from.username = (msg.from.username or tostring(msg.from.first_name)..(msg.from.id)):lower()
+    end
     msg.chat.id = tonumber(msg.chat.id) or 0
 
     local failed = false
@@ -35,6 +41,10 @@ function formatMessage(msg)
     end
 
     if not CheckUser(msg) then 
+       return false
+    end
+
+    if not CheckChannel(msg) then 
        return false
     end
 
@@ -185,6 +195,15 @@ end
 
 function formatUserHtml(msg)
     local dat = msg
+
+    if msg.sender_chat then 
+        if msg.sender_chat.username then
+            return "@".. msg.sender_chat.username
+        else 
+            return msg.sender_chat.title:htmlFix()
+        end
+    end
+
     if not msg.from then 
         msg = {from = msg}
     end
@@ -310,6 +329,9 @@ function selectUsername(msg, format)
     if msg.username then 
         return selectUsername({from=msg}, true)
     end
+    if not msg.from then 
+        return "?user?"
+    end
     if not msg.from.username then 
         return not format and msg.from.first_name or ('<a href="tg://user?id='..msg.from.id..'">'..msg.from.first_name..'</a>')
     else 
@@ -325,7 +347,7 @@ end
 function Dump(T, l, str, supress)
     local ret = ""
     l = l or 1
-    supress = supress or {["_tmp"]=nil}
+    supress = supress or {["_tmp"]=false}
     if not T then 
         return tostring(T)
     end

@@ -9,7 +9,7 @@ function formatChatMessage(msg)
     chatObj.title = msg.chat.title
     chatObj.type = msg.chat.type
     chatObj.invite_link = msg.chat.invite_link
-    chatObj.username = msg.chat.username
+    chatObj.last_message = os.time()
 
 
 
@@ -32,26 +32,39 @@ function formatChatMessage(msg)
         chatObj.data.countcd2 = os.time() + 20 * 60
     end
 
-    if ((chatObj._tmp.adms_cache or 0 ) <= os.time()) then
-        cacheAdministrators(msg)
-    end
+    
+    checkCacheChatAdmins(msg)
+   
 end
 
-function  checkCacheChatAdmins(msg)
-    local chatObj = chats[msg.chat.id]
-    if ((chatObj._tmp.adms_cache or 0 ) <= os.time()) then
-        cacheAdministrators(msg)
+function  checkCacheChatAdmins(msg, chatOverride)
+    if msg.chat.type ~= "private" then
+        local chatObj = chats[chatOverride or msg.chat.id]
+        if chatObj and ((chatObj._tmp.adms_cache or 0 ) <= os.time()) then
+            cacheAdministrators({chat={id=chatOverride or  msg.chat.id}})
+        end
+        SaveChat(msg.chat.id)
     end
 end
 
 function cacheAdministrators(msgs)
-    local adms = bot.getChatAdministrators(msgs.chat.id)
+    local chatid = msgs.chat.id
+    local basechatInfo = bot.getChat(chatid)
+    local adms = bot.getChatAdministrators(chatid)
+
+    local chatobj = chats[chatid]
     if adms and adms.ok then
-        chats[msgs.chat.id]._tmp.adms = {}
+        chatobj._tmp.adms = {}
         for i,b in pairs(adms.result) do 
-            chats[msgs.chat.id]._tmp.adms[b.user.id] = true
+            chatobj._tmp.adms[b.user.id] = true
         end
-        chats[msgs.chat.id]._tmp.adms_cache = os.time() + 3600
+        chatobj._tmp.adms_cache = os.time() + 3600
+    end
+    if basechatInfo.ok then
+        chatobj.invite_link = basechatInfo.result.invite_link
+        chatobj.title = basechatInfo.result.title
+        chatobj.description = basechatInfo.result.description
+        chatobj.linked_chat_id = basechatInfo.result.linked_chat_id
     end
 end
 
@@ -64,7 +77,9 @@ function CheckChat(msg)
     local isNewChat = false
 	if msg.chat.type == "group" or msg.chat.type == "supergroup" then 
         if not chats[msg.chat.id] then
-            chats[msg.chat.id] = {
+            
+
+            local newChat = {
                 name = msg.chat.title, 
                 title=msg.chat.title, 
                 id=msg.chat.id, 
@@ -75,8 +90,19 @@ function CheckChat(msg)
                 },  
                  _tmp=emptyTMP()
             }
-            if not onNewChat(msg.chat.id, msg) then 
-                chats[msg.chat.id] = nil
+
+            local basechatInfo = bot.getChat(newChat.id)
+            if basechatInfo.ok then
+                newChat.invite_link = basechatInfo.result.invite_link
+                newChat.title = basechatInfo.result.title
+                newChat.description = basechatInfo.result.description
+                newChat.linked_chat_id = basechatInfo.result.linked_chat_id
+            end
+
+            chats[msg.chat.id] = newChat
+
+            if not onNewChat(newChat.id, msg) then 
+                chats[newChat.id] = nil
                 return false, "no chat allowed"
             else 
                 isNewChat = true
@@ -111,7 +137,9 @@ function SaveChat( chatid )
         g_redis:rename(chatKey, chatKey..".old")
 
         for i,b in pairs(chatObj.data) do 
-            g_redis:hset(chatKey, i, formatToJson(b))      
+            if i ~= "_tmp" and i ~= "_type" then
+                g_redis:hset(chatKey, i, formatToJson(b)) 
+            end     
         end
         if chatObj.title then
             g_redis:hset(rootKey, "title", formatToJson(chatObj.title))
@@ -122,6 +150,15 @@ function SaveChat( chatid )
             end
             if chatObj.username then
                 g_redis:hset(rootKey, "username", formatToJson(chatObj.username))
+            end
+            if chatObj.last_message then
+                g_redis:hset(rootKey, "last_message", formatToJson(chatObj.last_message))
+            end
+            if chatObj.last_message then
+                g_redis:hset(rootKey, "linked_chat_id", formatToJson(chatObj.linked_chat_id))
+            end
+            if chatObj.last_message then
+                g_redis:hset(rootKey, "description", formatToJson(chatObj.description))
             end
         end
 
@@ -246,8 +283,8 @@ function loadChat(chatid)
 
 
         local mt = {__newindex = function(org, field, val)
-            if field ~= "title" and field ~= "id" and field ~= "type" and field ~= "invite_link"  and field ~= "username" then
-                error("Trying to set a var in protected region. Use _tmp for temporary or data to permanent")
+            if field ~= "title" and field ~= "id" and field ~= "type" and field ~= "invite_link"  and field ~= "username" and field ~= "description" and field ~= "linked_chat_id" and field ~= "last_message" then
+                error("Trying to set a var in protected region. Use _tmp for temporary or data to permanent> "..field)
             else
                 rawset(org,field,val)
             end
