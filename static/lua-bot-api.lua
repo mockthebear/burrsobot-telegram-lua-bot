@@ -481,7 +481,7 @@ end
 M.setChatPhoto = setChatPhoto
 
 
-local function banChatSenderChat(chat_id, message_id)
+local function banChatSenderChat(chat_id, sender_chat_id)
 
    local request_body = {}
 
