@@ -66,7 +66,7 @@ end
 
 function captcha.onTextReceive(msg)
 
-	local captchaId = users[msg.from.id].captcha
+	local captchaId = getEntity(msg).captcha
 	if captchaId then
 		local seq = captcha.sequences[captchaId]
 		if seq and seq.chatid == msg.chat.id then 
@@ -219,7 +219,6 @@ function captcha.sendCaptcha(chat, text)
     for file in s:gmatch("(.-)\n") do 
     	parsed[#parsed+1] = file
     end
-    io.close(file)
 
     local selectedFile = parsed[math.random(1, #parsed)]
 
