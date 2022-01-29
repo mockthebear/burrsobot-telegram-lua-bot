@@ -21,10 +21,17 @@ function module.frame()
 
 end
 
+function module.onStickerReceive(msg)
+	if msg.sticker.file_unique_id == "AgADx2QAAq8ZYgc" then 
+		bot.sendAudio(g_chatid, getModulePath().."/bonk.mp3", nil, nil, ".Bonk", nil, msg.message_id)
+	end
+end
+
 --Runs some times
 function module.save()
 
 end
+--bonk.mp3
 
 function module.loadCommands()
 	addCommand( "revive"				, MODE_FREE, getModulePath().."/revive.lua", 2 , "useless-revive-desc")
