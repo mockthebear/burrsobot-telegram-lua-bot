@@ -30,7 +30,7 @@ end
 
 
 function module.onUpdateChatJoinRequest(msg)
-	local message = "User "..formatUserHtml(msg.from).." has requested to join "..msg.chat.title.." trought an invite link "..(msg.invite_link.name and (" via link <b>"..msg.invite_link.name.."</b>"))
+	local message = "User "..tostring(formatUserHtml(msg.from)).." has requested to join "..tostring(msg.chat.title).." trought an invite link "..(msg.invite_link.name and (" via link <b>"..msg.invite_link.name.."</b>" or ""))
 	local chatid = msg.chat.id 
 
 	if chats[chatid] and chats[chatid].data.joinRequest then
