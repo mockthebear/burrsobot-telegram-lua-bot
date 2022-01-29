@@ -84,9 +84,9 @@ function antibot.onTextReceive( msg )
 
 
 		if chats[msg.chat.id].data.no_nudes then  
-			local opUser = users[msg.from.id]
+			local opUser = getEntity(msg)
 			local dur = os.time() - opUser.joinDate[msg.chat.id] or os.time() - 300
-			if opUser.joinDate[msg.chat.id] and dur <= 300 then
+			if opUser and opUser.joinDate[msg.chat.id] and dur <= 300 then
 				if hasLink(msg.text) then
 					bot.sendMessage(msg.chat.id, tr("antibot-nolinks" ,selectUsername(msg, true),(300-dur)), "HTML")
 					deploy_deleteMessage(msg.chat.id, msg.message_id)
@@ -95,8 +95,6 @@ function antibot.onTextReceive( msg )
 			end
 		end
 	end
-
-
 end 
 
 function antibot.onDocumentReceive( msg )
@@ -223,7 +221,7 @@ function antibot.onPhotoReceive(msg)
 		end
 
 		if chats[msg.chat.id].data.no_nudes then  
-			local opUser = users[msg.from.id]
+			local opUser = getEntity(msg)
 			local dur = os.time() - opUser.joinDate[msg.chat.id]
 			if opUser.joinDate[msg.chat.id] and dur <= 300 then
 
