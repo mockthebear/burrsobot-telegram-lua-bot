@@ -144,12 +144,14 @@ end
 
 function noraid.checkUserMessage(msg, countMessage)
 
-	if noraid.staticRaiders[msg.from.username:lower()] then
-		say.admin("<b>[NORAID]</b>\n\nFound: "..msg.from.username, "HTML")
-		noraid.staticRaiders[msg.from.username:lower()] = nil
-		users[msg.from.id].noraid_banned = true 
-		SaveUser(msg.from.id)
-		noraid.save()
+	if msg.from.username then
+		if noraid.staticRaiders[msg.from.username:lower()] then
+			say.admin("<b>[NORAID]</b>\n\nFound: "..msg.from.username, "HTML")
+			noraid.staticRaiders[msg.from.username:lower()] = nil
+			users[msg.from.id].noraid_banned = true 
+			SaveUser(msg.from.id)
+			noraid.save()
+		end
 	end
 
 	if noraid.staticRaiders[tostring(msg.from.id)] then
@@ -309,9 +311,9 @@ function noraid.onNewChatParticipant(msg)
 
 
 	--Check if the user is marked as a raider~
-	if noraid.staticRaiders[entity.username:lower()] or getEntity(msg).noraid_banned or noraid.staticRaiders[tostring(entity.id)]  then 
+	if (entity.username and noraid.staticRaiders[entity.username:lower()]) or getEntity(msg).noraid_banned or noraid.staticRaiders[tostring(entity.id)]  then 
 		entity.noraid_banned = true
-		if noraid.staticRaiders[entity.username:lower()] or noraid.staticRaiders[tostring(entity.id)] then
+		if (entity.username and noraid.staticRaiders[entity.username:lower()]) or noraid.staticRaiders[tostring(entity.id)] then
 			say.admin("<b>[NORAID]</b>\n\nFound: "..(entity.username or entity.id), "HTML")
 			noraid.staticRaiders[entity.username:lower()] = nil
 			noraid.staticRaiders[tostring(entity.id)] = nil

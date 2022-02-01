@@ -78,19 +78,21 @@ function antibot.onTextReceive( msg )
 				deploy_deleteMessage(msg.chat.id, msg.message_id)
 				return
 			else 
-				SaveUser(msg.from.username)
+				SaveUser(msg.from.id)
 			end	
 		end
 
 
 		if chats[msg.chat.id].data.no_nudes then  
-			local opUser = getEntity(msg)
-			local dur = os.time() - opUser.joinDate[msg.chat.id] or os.time() - 300
-			if opUser and opUser.joinDate[msg.chat.id] and dur <= 300 then
-				if hasLink(msg.text) then
-					bot.sendMessage(msg.chat.id, tr("antibot-nolinks" ,selectUsername(msg, true),(300-dur)), "HTML")
-					deploy_deleteMessage(msg.chat.id, msg.message_id)
-					return
+			local opUser, which = getEntity(msg)
+			if which ~= "chat" and opUser then
+				local dur = os.time() - opUser.joinDate[msg.chat.id] or os.time() - 300
+				if opUser and opUser.joinDate[msg.chat.id] and dur <= 300 then
+					if hasLink(msg.text) then
+						bot.sendMessage(msg.chat.id, tr("antibot-nolinks" ,selectUsername(msg, true),(300-dur)), "HTML")
+						deploy_deleteMessage(msg.chat.id, msg.message_id)
+						return
+					end
 				end
 			end
 		end
@@ -100,8 +102,8 @@ end
 function antibot.onDocumentReceive( msg )
 	
 	if msg.isChat and chats[msg.chat.id].data.botProtection then
-		
-		if users[msg.from.id] and (chats[msg.chat.id]._tmp.checking[msg.from.id]) then 
+		local opUser = getEntity(msg)
+		if opUser[msg.from.id] and (chats[msg.chat.id]._tmp.checking[msg.from.id]) then 
 			deploy_deleteMessage(msg.chat.id, msg.message_id)
 			return
 		end
