@@ -39,6 +39,14 @@ function getEntityById(id)
 	return nil, "unkown"
 end
 
+function getEntityName(entity)
+	if entity._type == "user" then 
+		return entity.first_name
+	else
+		return entity.title
+	end
+end
+
 function isEntityChatAdmin(msg, overrideChat)
 	local ent, which = getEntity(msg)
 	if not ent then 
@@ -52,9 +60,8 @@ function isEntityChatAdmin(msg, overrideChat)
 	if which == "user" then 
 		return isUserChatAdmin(queryChat, msg.from.id)
 	end
-	print("checano: "..which.." em "..queryChat)
-	if which == "chat" then 
 
+	if which == "chat" then 
 		if overrideChat == msg.sender_chat.id or msg.sender_chat.id == msg.chat.id then 
 			return true
 		end

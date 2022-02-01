@@ -18,27 +18,6 @@ local aux = {
 setmetatable(users, aux)]]
 
 
-function getUserById(id)
-    if not users[id] then 
-        local usr = loadUser(id, username)
-        return usr
-    end
-    return users[id]
-end
-
-function getUserByUsername(uname)
-    uname = uname:lower()
-    if uname:sub(1,1) == "@" then 
-        uname = uname:sub(2, -1)
-    end
-    if not users[uname] then 
-        local usr = loadUser(nil, uname)
-        return usr
-    end
-    return users[uname]
-end
-
-
 function getTargetUser(msg, needTarget, global)
     local tgtStr 
     if msg.text:sub(1,1) == "/" then 
@@ -88,17 +67,15 @@ end
  
 
 
-function loadUser(id, username)
+function loadUser(id)
     
     local found = false    
     local counter = 0
     local updateUsername = ""
     local obj = nil
     local ret 
-    if id then
         local ret = db.getResult("SELECT * FROM `users` WHERE tid="..id.." LIMIT 1;")
         if ret:getID() ~= -1 and ret:getID() ~= nil then
-
             local dat = ret:getDataString('data')
             counter = counter +1
             local unse = unserialize(dat)
@@ -114,13 +91,15 @@ function loadUser(id, username)
                 if not unse.username then 
                     unse.username = setUsername
                 end
-                unse._tmp = {}
+                unse._tmp = {type="user"}
                 users[setUsername] = unse
                 users[id] = unse
                 obj = users[id]
 
                 for i,b in pairs(obj) do
-                    g_redis:hset("user:"..id, i, tostring(b))
+                    if i ~= "_tmp" and i ~= "_type" then
+                        g_redis:hset("user:"..id, i, formatToJson(b))
+                    end
                 end
 
                 found = true
@@ -132,9 +111,9 @@ function loadUser(id, username)
                 db.executeQuery("UPDATE `users` SET `username` = '"..db.escapeString(setUsername).."' WHERE tid="..id.." LIMIT 1;")
             end
         end
-    end
 
-    if not found then
+
+    --[[if not found then
         ret = db.getResult("SELECT * FROM `users` WHERE `username` = '"..db.escapeString(username).."' LIMIT 1;")
         if ret:getID() ~= -1 and ret:getID() ~= nil then
             local dat = ret:getDataString('data')
@@ -177,7 +156,7 @@ function loadUser(id, username)
             
             ret:free()
         end     
-    end
+    end]]
     return obj
 end
  
@@ -225,6 +204,23 @@ function isUserBotAdmin(id)
     return false    
 end
 
+function getUser(id)
+    local userObj = users[id]
+    if not userObj then 
+        local loded = loadUser(id)
+        if loded then
+            loded._tmp = {type="user"}
+            users[id] = loded
+            return loded, true
+        else 
+            return nil, false
+        end
+    else 
+        return userObj, false
+    end
+end
+
+getUserById = getUser 
 
 function CheckUser(msg, isNew)
     if msg.sender_chat then 
@@ -234,59 +230,48 @@ function CheckUser(msg, isNew)
     if not msg.from then 
         return true
     end
-    if not msg.from.username then 
-        return true
+    if msg.from.username then 
+        msg.from.username = msg.from.username:lower()
     end
 
-    msg.from.username = msg.from.username:lower()
-
-    
-    
-    local loded = nil
+    local id = msg.from.id
+    local userObj, loaded = getUser(id)
     --Load user~
-    if not users[msg.from.id] or not users[msg.from.username] then 
-        local newUser = true
-        loded = loadUser(msg.from.id, msg.from.username)
-        if not loded then
+    if not userObj then 
+        local greater = g_redis:get("max_user")
+        greater = tonumber(greater or "") or 0 
+        if (greater < id) then
+            g_redis:set("max_user", tostring(id))
+            say.admin("New account found under: "..formatUserHtml(msg), "HTML")
+        end 
 
-            local greater = g_redis:get("max_user")
-            
-            greater = tonumber(greater or "") or 0 
-            if (greater < msg.from.id) then
-                g_redis:set("max_user", tostring(msg.from.id))
-                say.admin("New account found under: "..formatUserHtml(msg), "HTML")
-            end 
-            local avg = g_redis:get("avg_user") or "1980000000"
-            if msg.from.id >= (tonumber(avg) or 1980000000) then
-                say.admin("Possible account found under: "..formatUserHtml(msg), "HTML")
-            end
-            print("New user: ",msg.from.username .. ":"..msg.from.id) 
-            users[msg.from.username] = {telegramid = msg.from.id, first_name=msg.from.first_name, username=msg.from.username, joinDate={}, _tmp = {type="user"}, discovery=os.time()}
-            users[msg.from.id] = users[msg.from.username]
-            
-            if msg.chat and chats[msg.chat.id] then
-                chats[msg.chat.id]._tmp.newUser[msg.from.username] = isNew
-            end
-
-            db.executeQuery("INSERT INTO `users` (`id`, `username`, `data`, `tid`, `last_seen`) VALUES (NULL, '"..db.escapeString(msg.from.username:lower()).."', '', '"..msg.from.id.."', "..os.time()..");")
-                
-            if isNew then
-                local ret, res = checkUserSafe(msg.chat.id, msg.from.id)
-                if not ret then --or msg.from.username ~= msg.from.username2 or chats[msg.chat.id].data.botEnforced
-                    --say.admin("New user "..msg.from.username.." with unsafe = "..res)
-                    users[msg.from.id].unsafe = res
-                end
-            end
-        else 
-            --print("Loaded user: "..msg.from.username)
+        local avg = g_redis:get("avg_user") or "1980000000"
+        if id >= (tonumber(avg) or 1980000000) then
+            say.admin("Possible account found under: "..formatUserHtml(msg).." ("..id..")", "HTML")
         end
+        print("New user: ",msg.from.first_name .. ":"..msg.from.id) 
+        userObj = {telegramid = msg.from.id, first_name=msg.from.first_name, username=msg.from.username, joinDate={}, _tmp = {type="user"}, discovery=os.time()}
+
+        if msg.chat and chats[msg.chat.id] then
+            chats[msg.chat.id]._tmp.newUser[msg.from.id] = isNew
+        end
+
+        local tmpName = msg.from.username and msg.from.username or (msg.from.first_name..msg.from.id)
+        db.executeQuery("INSERT INTO `users` (`id`, `username`, `data`, `tid`, `last_seen`) VALUES (NULL, '"..db.escapeString(tmpName).."', '', '"..msg.from.id.."', "..os.time()..");")
+
+        if isNew then
+            local ret, res = checkUserSafe(msg.chat.id, msg.from.id)
+            if not ret then --or msg.from.username ~= msg.from.username2 or chats[msg.chat.id].data.botEnforced
+                --say.admin("New user "..msg.from.username.." with unsafe = "..res)
+                userObj.unsafe = res
+            end
+        end
+
+        users[msg.from.id] = userObj 
     end
-
-    local userObj = users[msg.from.id]
-
+  
     if type(userObj.joinDate) ~= 'table' then 
         userObj.joinDate = {}
-
     end
 
     if msg.chat then
@@ -298,14 +283,10 @@ function CheckUser(msg, isNew)
             end
         end
 
-
-
-        
         if msg.isChat then
 
             if not userObj.joinDate[msg.chat.id] then 
-
-                userObj.joinDate[msg.chat.id] = tonumber(msg.date) --todo adjust this sheet.
+                userObj.joinDate[msg.chat.id] = tonumber(msg.date) - 3600
                 print(msg.from.first_name.." joins chat "..msg.chat.title.." at "..msg.date) 
                 SaveUser(msg.from.id)
             end
@@ -354,7 +335,7 @@ function SaveUser(id)
 
         for i,b in pairs(users[id]) do
             if i ~= "_tmp" and i ~= "_type" then
-                g_redis:hset("user:"..id, i, tostring(b))
+                g_redis:hset("user:"..id, i, formatToJson(b))
             end
         end
         

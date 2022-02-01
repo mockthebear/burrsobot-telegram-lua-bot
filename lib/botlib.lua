@@ -29,8 +29,10 @@ function formatMessage(msg)
     if msg.from then
         msg.from.originalUname = msg.from.username
 
-        msg.from.username2 = (msg.from.username or tostring(msg.from.first_name)..(msg.from.id))
-        msg.from.username = (msg.from.username or tostring(msg.from.first_name)..(msg.from.id)):lower()
+        --msg.from.username2 = (msg.from.username or tostring(msg.from.first_name)..(msg.from.id))
+        if msg.from.username then
+            msg.from.username = msg.from.username:lower()
+        end
     end
     msg.chat.id = tonumber(msg.chat.id) or 0
 
@@ -47,6 +49,8 @@ function formatMessage(msg)
     if not CheckChannel(msg) then 
        return false
     end
+
+    checkUsername(msg)
 
     g_msg = msg
     g_chatid = msg.chat.id
@@ -196,23 +200,22 @@ end
 function formatUserHtml(msg)
     local dat = msg
 
-    if msg.sender_chat then 
-        if msg.sender_chat.username then
-            return "@".. msg.sender_chat.username
-        else 
-            return msg.sender_chat.title:htmlFix()
-        end
-    end
-
     if not msg.from then 
         msg = {from = msg}
     end
-    if not msg.from.id then 
-        msg.from.id = telegramid
+
+    local entity, which = getEntity(msg) 
+
+    if which == "channel" or which == "chat" then
+        if msg.sender_chat then 
+            if msg.sender_chat.username then
+                return "@".. msg.sender_chat.username
+            else 
+                return msg.sender_chat.title:htmlFix()
+            end
+        end
     end
-    if not msg.from.id then 
-    	return (msg.from.username and ("@"..msg.from.username) or (msg.from.first_name or "?"):htmlFix())
-    end
+
     return ('<a href="tg://user?id='..msg.from.id..'">'..(msg.from.username and ("@"..msg.from.username) or (msg.from.first_name or "?name?"):htmlFix())..'</a>')
 end
 

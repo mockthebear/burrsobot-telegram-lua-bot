@@ -275,6 +275,7 @@ function loadChat(chatid)
             chatObject[i] = unformatFromJson(b) 
         end
         chatObject._tmp=emptyTMP()
+        chatObject._tmp.type = "chat"
         chatObject.data = {}
 
         for i,b in pairs(chatData) do 

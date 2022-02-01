@@ -29,11 +29,26 @@ end
 
 
 function isChannelAdminAdmin(chatid, id)
-    print("the linked is: "..chats[chatid].linked_chat_id.." and i am "..id)
     if chats[chatid].linked_chat_id == id then 
         return true
     end
     return false
+end
+
+function getChannel(id)
+    local channelObj = channels[id]
+    if not channelObj then 
+        local load = loadChannel(id)
+        if not load then 
+            return nil, false
+        else 
+            channels[id] = load 
+            load.joinDate = {}
+            load._tmp = {type="channel"}
+            return load, true
+        end
+    end
+    return channelObj, false
 end
 
 
@@ -50,30 +65,30 @@ function CheckChannel(msg)
             senderObj.username = senderObj.username:lower()
         end
 
-        local channelObj = channels[senderObj.id]
-        if not channelObj then 
-            local load = loadChannel(senderObj.id)
-            if not load then
-                channels[senderObj.id] = senderObj
-                channelObj = senderObj
-                channelObj.discovery = os.time()
-                print("New channel: "..senderObj.title)
-            else 
-            channels[senderObj.id] = load 
-                load.username = senderObj.username
-                load.title = senderObj.title
-                load.type = senderObj.type
-                channelObj = load
-            end
-            channelObj._tmp = {}
-            channelObj._type = msg.sender_chat.type
-            channelObj.joinDate = {}
+        local channelObj, loaded = getChannel(senderObj.id)
+        if not channelObj then
+            channels[senderObj.id] = senderObj
+            channelObj = senderObj
+            senderObj._tmp = {type="channel"}
+            channelObj.discovery = os.time()
+            print("New channel: "..senderObj.title)
+        end 
+        if loaded then
+            channelObj.username = senderObj.username
+            channelObj.title = senderObj.title
+            channelObj.type = senderObj.type
+        end
+        
+        channelObj._type = msg.sender_chat.type
 
-            
+        if not channelObj.joinDate then 
+            channelObj.joinDate = {}
         end
 
         if msg.chat then 
-            channelObj.joinDate[msg.chat.id] = os.time()
+            if not channelObj.joinDate[msg.chat.id] then
+                channelObj.joinDate[msg.chat.id] = os.time()-3600
+            end
         end
 
         SaveChannel(channelObj.id)

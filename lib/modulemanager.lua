@@ -39,6 +39,7 @@ function loadAuxiliarLibs(reload)
 
 	local priority = 100
 	local objs = {}
+	local libObjects = {}
 	for cnt, libname in pairs(auxLibs) do 
 
 		io.write("[Burrbot] "..math.floor(cnt/#auxLibs*100).."% Loading: "..libname)
@@ -94,9 +95,16 @@ function loadAuxiliarLibs(reload)
 
 			objs[pri+ priority] = libname
 			g_auxLibs[pri+ priority] = {lib=val,name=libname}
+			libObjects[libname]  = val
 			_G[libname] = val
+			
 		end
+
 		load()
+	end
+
+	for libname, val in pairs(libObjects) do 
+		_G[libname] = val
 	end
 
 	local indx = {}
