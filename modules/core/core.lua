@@ -57,16 +57,10 @@ function core.loadCommands()
 	addCommand( "invitelink"				, MODE_CHATADMS,  getModulePath().."/chat/link.lua", 2, "core-link-desc" )
 
 	addCommand( "inspect"				, MODE_FREE,  getModulePath().."/chat/inspectadm.lua", 2, "core-inspect-desc" )
-	--addCommand( "inspect"				, MODE_CHATADMS,  getModulePath().."/chat/inspectadm.lua", 2, "core-inspect-desc" )
-
-
-	
-	
-	
-
-
-
+	addCommand( "backup"				, MODE_ONLY_ADM,  getModulePath().."/backup.lua", 2, "core-backup-desc" )
 end
+
+
 
 function core.loadTranslation()
 	g_locale[LANG_US]["core-commands-desc"] = "Show all commands that can be used right now. The list might be different if you use in a chat because there are commands that only appear in chats."
