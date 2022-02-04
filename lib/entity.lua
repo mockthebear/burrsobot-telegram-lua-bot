@@ -12,7 +12,7 @@ function getEntity(msg)
 		end
 		if id == 1087968824 then 
 			--Administrator!
-			return getEntityById(msg.sender_chat.id)
+			return getEntityById((msg.sender_chat or msg.new_chat_member.user).id)
 		end
 		return getEntityById(id)
 	elseif msg.sender_chat then

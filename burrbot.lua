@@ -43,6 +43,7 @@ dofile("config.lua")
 print("Loading bot libs")
 dofile("lib/configs.lua")
 dofile("lib/locale.lua")
+dofile("lib/username.lua")
 dofile("lib/users.lua")
 dofile("lib/channels.lua")
 dofile("lib/chats.lua")
@@ -140,7 +141,11 @@ extension.onNewChatParticipant = function(msg)
 
 	--Store user joins
 	chats[msg.chat.id]._tmp.newUser[msg.new_chat_participant.id] = true
-	users[msg.new_chat_participant.id].joinDate[msg.chat.id] = tonumber(msg.date) or 0
+
+	local entity, which = getEntityById(msg.new_chat_participant.id)
+	if which == "user" or which == "channel" then
+		entity.joinDate[msg.chat.id] = tonumber(msg.date) or 0
+	end
 	SaveUser(msg.new_chat_participant.id)
 	
 

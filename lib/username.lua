@@ -13,15 +13,15 @@ function getUsernameKey(username)
 end
 
 function setUsernameKey(entity)
-
-	
 	if not entity._tmp then 
 		say.admin("The missing entity data is: <code>"..cjson.encode(entity).."</code>", "HTML")
 	end
-
 	local _type = entity._tmp.type
-
-	g_redis:set("username:"..entity.username ,_type..":"..entity.id)
+	if not entity.username then 
+		g_redis:del("username:"..entity.username)
+	else	
+		g_redis:set("username:"..entity.username ,_type..":"..entity.id)
+	end
 end
 
 

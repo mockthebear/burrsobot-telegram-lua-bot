@@ -439,10 +439,30 @@ end
 
 function unformatFromJson(tb, skipDecode) 
     local newT = {}
-    
 
-    tb = skipDecode and tb or cjson.decode(tb)
+--[[    if tb:find('"') or tb:find('"') then
+        tb = tb:gsub("\"", "")
+        tb = tb:gsub("\\", "")
+
+        tb = tonumber(tb) or tb
+        if type(tb) == "string" then 
+            tb = '"'..tb..'"'
+        end
+    end]]
+    local ret, conv = pcall(cjson.decode,tb)
+
+    if not ret then 
+        print("Failed to decode ["..cjson.encode(tb).."]")
+        return tb
+    end
+    tb = skipDecode and tb or conv
     if type(tb) ~= "table" then 
+        if tb == "true" then 
+            return true
+        end
+        if tb == "false" then 
+            return false
+        end
         return tb
     end
 
@@ -452,7 +472,7 @@ function unformatFromJson(tb, skipDecode)
             data = unformatFromJson(b, true) 
         end
         local indx = i
-        if tostring(i):sub(1,3) == "___" then 
+        if tostring(i):sub(1,3) == "___" then  
             indx = tonumber(i:sub(4, -1))
         end
         newT[indx] = data

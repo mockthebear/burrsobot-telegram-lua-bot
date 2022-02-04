@@ -22,6 +22,9 @@ function formatChatMessage(msg)
         chatObj._tmp.users[msg.from.id] = msg.from
     end
 
+    if not tonumber(chatObj.data.countcd2) then 
+        chatObj.data.countcd2 = 0
+    end
     if not chatObj.data.mc or (not chatObj.data.countcd2 or chatObj.data.countcd2 <= os.time()) then
         local cc = bot.getChatMembersCount(msg.chat.id)
         if cc.ok then 

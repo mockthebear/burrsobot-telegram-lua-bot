@@ -1,23 +1,3 @@
---[[
-local storedUsers = {['a']=123}
-local aux = {
-    __index = function(my, field ) 
-        local usr = rawget(my, field)
-        if not usr then 
-            local s = loadUser(id, username)
-            --storedUsers[field.."USR"] = 321
-            --storedUsers[field] = 555
-            usr = 123
-            rawset(my, field, usr)
-        end
-        return usr
-    end,
-
-    
-}
-setmetatable(users, aux)]]
-
-
 function getTargetUser(msg, needTarget, global)
     local tgtStr 
     if msg.text:sub(1,1) == "/" then 
@@ -30,14 +10,11 @@ function getTargetUser(msg, needTarget, global)
         tgtStr = tgtStr:gsub("@",""):lower()
         local usr = getUserByUsername(tgtStr)
         if not usr or not (usr.telegramid or usr.id) then 
-            print("No user from "..tgtStr)
             if tonumber(tgtStr) and users[tonumber(tgtStr)] and users[tonumber(tgtStr)].id then 
                 usr = users[tonumber(tgtStr)]
-                print("from id? "..tgtStr)
             end
         end
         if not usr then 
-            print("NAN")
             return nil, tgtStr
         else 
             if global then
@@ -45,7 +22,6 @@ function getTargetUser(msg, needTarget, global)
             else
                 local res = bot.getChatMember(msg.chat.id, usr.telegramid or usr.id)
                 if not res.ok or ( (res.result.status == "left" or res.result.status == "kicked")) then 
-                    print("NAAN")
                     return nil, tgtStr
                 end
                 return res.result.user
@@ -64,103 +40,30 @@ function getTargetUser(msg, needTarget, global)
         end
     end
 end
- 
 
+
+ 
 
 function loadUser(id)
-    
-    local found = false    
-    local counter = 0
-    local updateUsername = ""
-    local obj = nil
-    local ret 
-        local ret = db.getResult("SELECT * FROM `users` WHERE tid="..id.." LIMIT 1;")
-        if ret:getID() ~= -1 and ret:getID() ~= nil then
-            local dat = ret:getDataString('data')
-            counter = counter +1
-            local unse = unserialize(dat)
-            if unse then
-               local setUsername = username
-                --print("From 1 ->"..tostring(username).." -> "..ret:getDataString('username'):lower())
-                if ret:getDataString('username'):lower() ~= username then 
-                    setUsername = username or ret:getDataString('username'):lower()
-                    unse.username = setUsername
-                    print("Mismatched username! DB="..ret:getDataString('username'):lower().." observed="..tostring(username)) 
-                end
-
-                if not unse.username then 
-                    unse.username = setUsername
-                end
-                unse._tmp = {type="user"}
-                users[setUsername] = unse
-                users[id] = unse
-                obj = users[id]
-
-                for i,b in pairs(obj) do
-                    if i ~= "_tmp" and i ~= "_type" then
-                        g_redis:hset("user:"..id, i, formatToJson(b))
-                    end
-                end
-
-                found = true
-            else 
-                print("Failed to parse~")
-            end
-            ret:free()
-            if updateUsername:len() > 0 then 
-                db.executeQuery("UPDATE `users` SET `username` = '"..db.escapeString(setUsername).."' WHERE tid="..id.." LIMIT 1;")
-            end
+    local dataRes = g_redis:hgetall("user:"..id)
+    if dataRes and dataRes ~= ngx.null then
+        local miniUser = {}
+        local userData = table.arraytohash(dataRes) 
+        print("Loading user: "..id)
+        for i,b in pairs(userData) do 
+            if i ~= "_tmp" and i ~= "_type" then
+                miniUser[i] = unformatFromJson(b) 
+             end
         end
-
-
-    --[[if not found then
-        ret = db.getResult("SELECT * FROM `users` WHERE `username` = '"..db.escapeString(username).."' LIMIT 1;")
-        if ret:getID() ~= -1 and ret:getID() ~= nil then
-            local dat = ret:getDataString('data')
-            counter = counter +1
-            local unse = unserialize(dat)
-            --print("From 2 ->" ..username)
-            if unse then
-                
-                local targetId = ret:getDataInt('tid')
-                ret:free()
-
-                if id and targetId ~= id then 
-                    say.admin("Mismatched id: ".. ret:getDataInt('tid').." ~= "..id.. " upon "..username)
-                    db.executeQuery("DELETE FROM `users` WHERE `tid` = '"..id.."';")
-                    db.executeQuery("UPDATE `users` SET tid="..id.." WHERE `username` = '"..db.escapeString(username).."';")
-                    targetId = id
-                end
-
-                --print("Assigned as: "..username.." = ".. targetId)
-                unse._tmp = {type="user"}
-                unse.telegramid = targetId 
-                users[username] = unse
-                users[targetId] = unse
-                if not users[targetId].id then 
-                    users[targetId].id = targetId
-                    users[targetId].first_name = username
-                end
- 
-
-                if not unse.username then 
-                    unse.username = username
-                end
-
-                obj = users[targetId]
-
-                for i,b in pairs(obj) do
-                    g_redis:hset("user:"..targetId, i, tostring(b))
-                end
-            end
-            
-            ret:free()
-        end     
-    end]]
-    return obj
+        miniUser._tmp = {type="user"}
+        miniUser._type = "user"
+        if miniUser.username then 
+            users[miniUser.username] = miniUser
+        end
+        users[id] = miniUser
+        return miniUser
+    end       
 end
- 
-
 
 function isUserChatAdmin(chat, id)
     if not id then 
@@ -238,6 +141,7 @@ function CheckUser(msg, isNew)
     local userObj, loaded = getUser(id)
     --Load user~
     if not userObj then 
+        isNewUser = true
         local greater = g_redis:get("max_user")
         greater = tonumber(greater or "") or 0 
         if (greater < id) then
@@ -255,10 +159,6 @@ function CheckUser(msg, isNew)
         if msg.chat and chats[msg.chat.id] then
             chats[msg.chat.id]._tmp.newUser[msg.from.id] = isNew
         end
-
-        local tmpName = msg.from.username and msg.from.username or (msg.from.first_name..msg.from.id)
-        db.executeQuery("INSERT INTO `users` (`id`, `username`, `data`, `tid`, `last_seen`) VALUES (NULL, '"..db.escapeString(tmpName).."', '', '"..msg.from.id.."', "..os.time()..");")
-
         if isNew then
             local ret, res = checkUserSafe(msg.chat.id, msg.from.id)
             if not ret then --or msg.from.username ~= msg.from.username2 or chats[msg.chat.id].data.botEnforced
@@ -269,10 +169,16 @@ function CheckUser(msg, isNew)
 
         users[msg.from.id] = userObj 
     end
+
+    userObj.id = msg.from.id
+
   
     if type(userObj.joinDate) ~= 'table' then 
         userObj.joinDate = {}
     end
+
+    userObj.last_name = msg.from.last_name
+    userObj.language_code = msg.from.language_code
 
     if msg.chat then
         --If the user is sending a private message, we store that he sent us a private and set the language~
@@ -293,18 +199,16 @@ function CheckUser(msg, isNew)
         end
     end
 
-    userObj.id = msg.from.id
-    userObj.last_name = msg.from.last_name
-    userObj.language_code = msg.from.language_code
 
-    if userObj.first_name~=msg.from.first_name then 
+
+    if userObj.first_name == nil or userObj.first_name~=msg.from.first_name then 
         userObj.first_name = msg.from.first_name:gsub("[#@\"]", "")
         SaveUser(msg.from.id)
     end
 
     return true
 end
-
+ 
 
 
 
@@ -321,9 +225,7 @@ function SaveUser(id)
     end
 
     if users[id] then 
-
         uname = users[id].username or uname
-
 
         if not users[id].telegramid then 
             if type(id) == "number" then
@@ -339,15 +241,6 @@ function SaveUser(id)
             end
         end
         
-        local dat = serialize(users[id])
-        local res, err, erra = db.executeQuery("UPDATE `users` SET `username` = '"..db.escapeString(tostring(uname)).."', `data`='"..db.escapeString(tostring(dat)).."', `last_seen`='"..os.time().."' WHERE `tid` = '"..users[id].telegramid.."'") 
-        if (res == 0) then
-            db.executeQuery("INSERT INTO `users` (`id`, `username`, `data`, `tid`) VALUES (NULL, '"..db.escapeString(tostring(uname):lower()).."', '"..db.escapeString(dat).."', '"..users[id].telegramid.."');")
-            say.admin("Error saving users "..uname.." here its data:"..debug.traceback().."\n\n"..dat)
-            say.admin("Saving error describe as: "..tostring(err).." = "..tostring(erra))
-            logText("users", os.time().."\t"..uname.." "..users[id].telegramid.." "..dat)
-            return false
-        end
         return true
     else 
         say.admin("Error saving unknow "..id..":"..debug.traceback()) 

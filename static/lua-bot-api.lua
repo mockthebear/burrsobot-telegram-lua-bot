@@ -519,7 +519,7 @@ end
 
 M.unbanChatSenderChat = unbanChatSenderChat
 
-local function approveChatJoinRequest(chat_id, message_id)
+local function approveChatJoinRequest(chat_id, user_id)
 
    local request_body = {}
 
@@ -538,7 +538,7 @@ end
 
 M.approveChatJoinRequest = approveChatJoinRequest
 
-local function declineChatJoinRequest(chat_id, message_id)
+local function declineChatJoinRequest(chat_id, user_id)
 
    local request_body = {}
 
@@ -554,6 +554,8 @@ local function declineChatJoinRequest(chat_id, message_id)
     return nil, "Request Error"
   end
 end
+
+M.declineChatJoinRequest = declineChatJoinRequest
 
 local function setMyCommands(chat_id, message_id)
 
