@@ -153,6 +153,9 @@ function welcome.sendWelcomeMessage(msg, kb, append)
         return bot.sendSticker(msg.chat.id, stckrId, false, msg.message_id, kb)
     else
         local ret = bot.sendMessage(msg.chat.id, text, "HTML", true, false, msg.message_id, kb)
+        if not ret.result then 
+        	ret = bot.sendMessage(msg.chat.id, text, nil, true, false, msg.message_id, kb)
+        end
         if ret.result then
 	        if not chats[msg.chat.id].data.welcome and not kb then
 	            scheduleEvent(60 * 4, function()

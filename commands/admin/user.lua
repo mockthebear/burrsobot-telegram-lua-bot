@@ -19,18 +19,22 @@ function OnCommand(user, msg, args)
 	local JSON = require("JSON")
 	say(Dump(usr))
 	local cs = ""
+	if not usr then 
+		reply("No user by "..args[2])
+		return
+	end
 	for i,b in pairs(usr.joinDate) do 
 		if chats[i] then 
 			local chatData = bot.getChatMember(i, usr.telegramid)
-			if chatData.result and chatData.result.status ~= "kicked" then
-				cs = cs .. i..": ".. tostring((chats[i] or {name=i}).name).." -> [["..JSON:encode(chatData) .."]]\n"
+			if chatData.result then
+				cs = cs .. i..": ".. tostring((chats[i] or {name=i}).title).." -> <b>"..chatData.result.status .."</b>\n"
 			else 
-				cs = cs .. "Not in to: "..tostring((chats[i] or {name=i}).name).." [["..JSON:encode(chatData).."]]\n"
+				cs = cs .. "Not in to: "..tostring((chats[i] or {name=i}).title).." [["..cjson.encode(chatData).."]\n"
 			end
 		end
 	end
 	print(cs)
-	say_big("Its on chats: "..cs)
+	say.html("Its on chats: "..cs)
 	bot.sendMessage(g_chatid,'<a href="tg://user?id='..usr.telegramid..'">User!</a>.', "HTML")
 
 	SaveUser(args[2])
