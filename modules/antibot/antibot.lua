@@ -190,6 +190,7 @@ function antibot.onCallbackQueryReceive(msg)
 			if b and chats[chat] then 
 				users[id].bot_banned =  0
 				users[id].deleted = 0
+				users[id].is_human_permanent = true
 				chats[chat]._tmp.checking[id] = false
 				bot.restrictChatMember(chat , id, -1, false, false, false, false) 
 				bot.unbanChatMember(chat, id)

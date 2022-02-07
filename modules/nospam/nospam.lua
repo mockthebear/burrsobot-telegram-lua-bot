@@ -168,13 +168,18 @@ function nospam.check_spam_message(msg)
             local rate = nospam.calculate_rate(lch._tmp.spam[msg.from.id])
 
             if rate >= lch._tmp.spam[msg.from.id][3] then 
-                print("Rate limiting "..msg.from.first_name)
-                if users[msg.from.id] then 
-                    local action = chats[msg.chat.id].data.actionSpam or "ban"
-                    reply(tr("nospam-taking-action", rate, lch._tmp.spam[msg.from.id][3], action))
-                    nospam.apply_spam_action(msg, action)
-                    lch._tmp.spam[msg.from.id] = nil
-                    return KILL_EXECUTION
+            	local opUser = getEntity(msg)
+
+                
+                if opUser then 
+                	print("Rate limiting "..getEntityName(opUser))
+                	if not isEntityChatAdmin(msg) then
+	                    local action = chats[msg.chat.id].data.actionSpam or "ban"
+	                    reply(tr("nospam-taking-action", rate, lch._tmp.spam[msg.from.id][3], action))
+	                    nospam.apply_spam_action(msg, action)
+	                    lch._tmp.spam[msg.from.id] = nil
+	                    return KILL_EXECUTION
+	                end
                 end
             end
         end
