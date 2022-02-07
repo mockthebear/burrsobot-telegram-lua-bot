@@ -39,6 +39,6 @@ function OnCommand(msg, txt, args)
    	chats[msg.chat.id].data.disabledc[thisOrFirst(cmd.words)] = true
 
     reply(tr("core-disable-disabled", thisOrFirst(cmd.words), disabledCommandString))
-
+    updateCommandListInChat(msg.chat.id)
    	SaveChat( msg.chat.id )
 end

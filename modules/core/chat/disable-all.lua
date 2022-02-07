@@ -30,5 +30,6 @@ function OnCommand(msg, txt, args)
   if disabledCommandString:len() > 0 then
     reply(tr("core-disable-show", disabledCommandString))
   end
+  updateCommandListInChat(msg.chat.id)
   SaveChat( msg.chat.id )
 end
