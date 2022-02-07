@@ -24,7 +24,7 @@ function module.save()
 end
 
 function module.loadCommands()
-	addCommand( "votekick"					, MODE_FREE, getModulePath().."/command.lua", 0, "votekick"  )
+	addCommand( "votekick"					, MODE_CHATONLY, getModulePath().."/command.lua", 0, "votekick"  )
 	
 end
 
