@@ -9,17 +9,20 @@ local pubsub = {
 		chat = {
 		},
 	},
+	callback = {
+	},
 	imagedir="/var/www/boto/images",
 
 	priority = DEFAULT_PRIORITY,
 }
 
-function pubsub.registerExternalVariable(location, varname, allowed, allowWrite, description, moduleName, aliases)
+function pubsub.registerExternalVariable(location, varname, allowed, allowWrite, description, moduleName, aliases, callback)
 	if pubsub.allowed[location] then 
 		moduleName = moduleName or g_moduleNow
 		if not pubsub.allowed[location][moduleName] then 
 			pubsub.allowed[location][moduleName] = {}
 		end
+
 		if type(allowed) ~= "table" then 
 		--	error("Type of allowed is wrong: "..type(allowed).." expected a table")
 		end
@@ -27,8 +30,10 @@ function pubsub.registerExternalVariable(location, varname, allowed, allowWrite,
 			accept = allowed,
 			write=allowWrite,
 			description=description,
-			alias = aliases
+			alias = aliases,
 		}
+		pubsub.callback[varname] = callback
+
 	end
 end
 
@@ -75,7 +80,14 @@ function pubsub.ready()
 		values[thisOrFirst(b.words)] = "boolean"
 		cdvalues[thisOrFirst(b.words)] = b.cooldown
 	end
-	pubsub.registerExternalVariable("chat", "disabledc", {type="list_boolean_not", valid=values}, true, "Enabled commands", "Commands", {["ON"]= "Disabled", ["OFF"] = "Enabled", [".head"] = "/"})
+
+	pubsub.registerExternalVariable("chat", "disabledc", {type="list_boolean_not", valid=values}, true, "Enabled commands", "Commands", {["ON"]= "Disabled", ["OFF"] = "Enabled", [".head"] = "/"}, function(chatid)
+		if chats[chatid] then
+			chats[chatid].data.changedCommand = true
+			return true
+		end
+		return false
+	end)
 	pubsub.registerExternalVariable("chat", "custom_cooldown", {type="list_number", fields=cdvalues}, true, "Command Cooldown", "Cooldown", {[".head"] = "/"})
 	pubsub.registerExternalVariable("chat", "global_cooldown", {type="number",  default=1}, true, "Global command cooldown", "Cooldown")
 	pubsub.registerExternalVariable("chat", "cooldown_ignore_admins", {type="boolean",  default=false}, true, "Admins have no cooldown", "Cooldown")
@@ -138,12 +150,21 @@ function pubsub.frame()
     				if not accepted then 
     					pubsub.replyMessageId(messageid, "Value="..tostring(val).." is not allowed ["..validString.."]")
     				else 
+    					local valid = true
+	    				if pubsub.callback[key] then 
+	    					local res, proceed = pcall(pubsub.callback[key], chatid, key, index)
+	    					if not res or not proceed then 
+	    						pubsub.replyMessageId(messageid, "Not ok")
+	    						return
+	    					end
+	    				end
     					if restriction.accept and (restriction.accept.type == "list_boolean" or  restriction.accept.type == "list_boolean_not") then 
     						if not chats[chatid].data[key] then 
     							chats[chatid].data[key] = {}
     						end
     						local oldVal = chats[chatid].data[key][index]
 	    					chats[chatid].data[key][index] = val
+
 	    					local stat = bot.sendMessage(chatid, "Altered <b>"..restriction.description.."</b> by "..formatUserHtml({id=message.fromid, first_name=message.fromname}).." to:\n\n"
 	    						..pubsub.formatAlias( ".head", restriction, true )..index.." -> "..pubsub.formatOutput(val, restriction), "HTML")
 	    					if stat.ok then
