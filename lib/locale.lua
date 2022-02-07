@@ -84,7 +84,7 @@ end
 function loadDefaultLanguage()
 
 
-	g_locale[LANG_BR] = {
+	g_locale[1] = {
 		["default-chat-only"] = "Desculpe, ese comando é apenas para chats.",
 
 
@@ -104,6 +104,7 @@ function loadDefaultLanguage()
 		["default-command-chatdmin"] = "Somente admins do chat podem usar esse comando.\n<i>Essa mensagem será apagada em 15 segundos</i>.",
 		["default-command-botadmin"] = "Somente admins do bot podem usar esse comando.\n<i>Essa mensagem será apagada em 15 segundos</i>.",
 		["default-command-chatonly"] = "Esse comando é exclusivo para ser usado em chats.\n<i>Essa mensagem será apagada em 15 segundos</i>.",
+		["default-command-privateonly"] = "Esse comando é exclusivo para ser usado no privado.\n<i>Essa mensagem será apagada em 15 segundos</i>.",
 		["default-command-disabled"] = "Esse comando está deshabilitado nesse chat.\n<i>Essa mensagem será apagada em 15 segundos</i>.",
 		["default-command-nsfw"] = "Esse comando é classificado como NSFW e não pode ser enviado nesse chat. Mude isso com '/sfw no'\n<i>Essa mensagem será apagada em 15 segundos</i>.",
 
@@ -111,7 +112,7 @@ function loadDefaultLanguage()
 		["default-start-chat"] = "Esse comando foi feito para ser usado no private comigo. Mas se o que estiver procurando é a lista de comandos use /commands aqui ou vá para o pvt.",
 
 	}
-	g_locale[LANG_US] = {
+	g_locale[2] = {
 		["global"] = "chat global",
 		["command"] = "command",
 		["default-command-cooldown"] = "Its on %s cooldown. No spam plz :c\nIf you need help with some commands use <code>/help (command name)</code>\nThis command has <b>%s</b> seconds of coldown. Wait for more <b>%s</b> seconds and try again.",
@@ -119,6 +120,7 @@ function loadDefaultLanguage()
 		["default-command-chatdmin"] = "Only chat admins can use this command.\n<i>Message will be deleted in 15 seconds</i>.",
 		["default-command-botadmin"] = "Only bot admins can use this command.\n<i>Message will be deleted in 15 seconds</i>.",
 		["default-command-chatonly"] = "This command can only be executed in a chat.\n<i>Message will be deleted in 15 seconds</i>.",
+		["default-command-privateonly"] = "This command can only be executed the private chat.\n<i>Message will be deleted in 15 seconds</i>.",
 		["default-command-disabled"] = "This command is disable on this chat.\n<i>Message will be deleted in 15 seconds</i>.",
 		["default-command-nsfw"] = "This command is classified as NSFW and cant be send here. Use '/sfw no' to enable\n<i>Message will be deleted in 15 seconds</i>.",
 

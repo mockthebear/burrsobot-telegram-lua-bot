@@ -55,6 +55,7 @@ dofile("lib/parallel.lua")
 dofile("lib/dblib.lua")
 dofile("lib/compat.lua")
 dofile("lib/commands.lua")
+dofile("lib/mycommands.lua")
 
 
 print("Connecting on redis~")
@@ -404,6 +405,18 @@ function onMinute(min, hour, day)
 	if min%5 == 0 then 
 		runModulesMethod(nil, "save")
 	end
+
+	if min%2 == 0 then
+		for chatid,b in pairs(chats) do
+			if chats[chatid].data.changedCommand then
+				chats[chatid].data.changedCommand = false
+				print("Upgrading chat ["..b.title.."] commands")
+				SaveChat(chatid)
+				updateCommandListInChat(chatid)
+				return
+			end 
+		end
+	end
 end
 
 function onHour(min, hour, day)
@@ -457,6 +470,10 @@ print("Calling ready")
 if not runModulesMethod(msg, "ready") then 
 	return
 end
+
+print("Setup my commands")
+SetupMyCommands()
+
 
 print("Ready")
 

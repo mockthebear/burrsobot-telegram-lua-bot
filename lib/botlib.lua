@@ -4,7 +4,8 @@ MODE_ONLY_ADM = 1
 MODE_NSFW     = 2
 MODE_UNLISTED = 3
 MODE_CHATADMS = 4
-
+MODE_CHATONLY = 5
+MODE_PRIVATEONLY = 6
 
 
 
@@ -440,20 +441,11 @@ end
 function unformatFromJson(tb, skipDecode) 
     local newT = {}
 
---[[    if tb:find('"') or tb:find('"') then
-        tb = tb:gsub("\"", "")
-        tb = tb:gsub("\\", "")
-
-        tb = tonumber(tb) or tb
-        if type(tb) == "string" then 
-            tb = '"'..tb..'"'
-        end
-    end]]
     local ret, conv = pcall(cjson.decode,tb)
 
     if not ret then 
         print("Failed to decode ["..cjson.encode(tb).."]")
-        return tb
+        return nil
     end
     tb = skipDecode and tb or conv
     if type(tb) ~= "table" then 

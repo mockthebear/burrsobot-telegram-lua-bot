@@ -60,12 +60,16 @@ end
 function listCommandsData(groups)
 	local cmd = {}
 	for index ,b in pairs(g_commands) do 
-        for i, mode in pairs(groups) do 
-        	if b.mode == mode then 
-        		cmd[#cmd+1] = b
-        		break
-        	end
-        end
+		if not groups then
+			cmd[#cmd+1] = b
+		else
+	        for i, mode in pairs(groups) do 
+	        	if b.mode == mode then 
+	        		cmd[#cmd+1] = b
+	        		break
+	        	end
+	        end
+	    end
     end 
     return cmd
 end
@@ -85,7 +89,7 @@ end
 
 
 function listCommandsContext(msg, groups)
-	groups = {MODE_CHATADMS, MODE_ONLY_ADM, MODE_FREE, MODE_NSFW, msg.chat.id}
+	groups = {MODE_CHATADMS, MODE_ONLY_ADM, MODE_FREE, MODE_NSFW, MODE_CHATONLY, msg.chat.id}
 	local cmd = {}
 
 	local isChatAdmin = isEntityChatAdmin(msg)
@@ -104,6 +108,10 @@ function listCommandsContext(msg, groups)
         	if b.mode == mode then 
         		local ok = true
         		if mode == MODE_CHATADMS and not isChatAdmin then
+        			ok = false
+        		elseif mode == MODE_PRIVATEONLY and msg.chat.type ~= "private" then
+        			ok = false
+        		elseif mode == MODE_CHATONLY and not msg.isChat then
         			ok = false
         		elseif mode == MODE_ONLY_ADM and not isBotAdmin then
         			ok = false
@@ -251,6 +259,7 @@ function findCommand(msg)
     local text = msg.text
     if text:sub(1,1) == "/" then
     	local strArr = text:exploder(" ")
+
         local vaarg = nil
         strArr[1] = strArr[1]:gsub("/",""):lower()
         local targetChat = msg.chat.id
@@ -294,6 +303,21 @@ function findCommand(msg)
                             entity._tmp.warndc = os.time()+120
                             reply.delete(tr("default-command-botadmin"), 15, "HTML" )
                         end
+                    end
+                elseif b.mode == MODE_PRIVATEONLY then 
+                	if msg.chat and msg.chat.type ~= "private" then
+                		reply.delete(tr("default-command-privateonly"), 15, "HTML" )
+                        canRun = false
+                	end
+                elseif b.mode == MODE_CHATONLY then 
+                	if msg.chat and msg.chat.type ~= "private" then
+                        if not msg.isChat and not (targetChat ~= msg.chat.id and chats[targetChat]) then
+                            reply.delete(tr("default-command-chatonly"), 15, "HTML" )
+                            canRun = false
+                        end
+                    else 
+                    	reply.delete(tr("default-command-chatonly"), 15, "HTML" )
+                    	canRun = false
                     end
                 elseif b.mode == MODE_CHATADMS then 
                     if msg.chat then
@@ -365,7 +389,7 @@ function findCommand(msg)
 	                    	chats[msg.chat.id].data.last_command_use = os.time()
 	                    end
 	                    if type(b.path) == 'function' then
-	                        local success,err = pcall(b.path, msg, text, strArr)
+	                        local success,err = pcall(b.path, msg, text, strArr, targetChat, vaarg)
 	                            
 	                        b.rcold = false
 	                        return success,true,err, ret
@@ -381,7 +405,7 @@ function findCommand(msg)
 	                            return false, true, "No OnCommand(msg, text, args) found in file ".. b.path
 	                        end
 	                        msg.isCommand = true
-	                        ret,err = pcall(OnCommand, msg, text, strArr, targetChat,vaarg)
+	                        ret,err = pcall(OnCommand, msg, text, strArr, targetChat, vaarg)
 	                        if not ret then 
 	                            return false, true, err, ret
 	                        end
@@ -394,4 +418,12 @@ function findCommand(msg)
         end
     end
     return true, false
+end
+
+function cutCommand(str)
+	if str:sub(1,1) == "/" then
+		local begin, nextSpace = str:find("%s")
+		str = str:sub(nextSpace+1, -1)
+	end
+	return str
 end

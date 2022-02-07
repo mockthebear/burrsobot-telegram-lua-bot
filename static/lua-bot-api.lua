@@ -190,7 +190,6 @@ function makeRequest(method, body_arg, forceHttpConn, disableSchedule)
       },
   })
   
-
   connModule:close()
 
   local post = ngx.now() - pre 
@@ -557,7 +556,7 @@ end
 
 M.declineChatJoinRequest = declineChatJoinRequest
 
-local function setMyCommands(chat_id, message_id)
+local function setMyCommands(commands, scope, language_code)
 
    local request_body = {}
 
@@ -578,7 +577,27 @@ end
 M.setMyCommands = setMyCommands
 
 
-local function deleteMyCommands(chat_id, message_id)
+local function getMyCommands(scope, language_code)
+
+   local request_body = {memes=1}
+
+  request_body.scope = scope
+  request_body.language_code = language_code
+
+
+  local response = makeRequest("getMyCommands",request_body)
+
+  if (response.success == 1) then
+    return response.body
+  else
+    return nil, "Request Error"
+  end
+end
+
+M.getMyCommands = getMyCommands
+
+
+local function deleteMyCommands(scope, language_code)
 
    local request_body = {}
 
@@ -596,25 +615,6 @@ local function deleteMyCommands(chat_id, message_id)
 end
 
 M.deleteMyCommands = deleteMyCommands
-
-local function getMyCommands(chat_id, message_id)
-
-   local request_body = {}
-
-  request_body.scope = scope
-  request_body.language_code = language_code
-
-
-  local response = makeRequest("getMyCommands",request_body)
-
-  if (response.success == 1) then
-    return response.body
-  else
-    return nil, "Request Error"
-  end
-end
-
-M.getMyCommands = getMyCommands
 
 
 local function unpinChatMessage(chat_id, message_id)
