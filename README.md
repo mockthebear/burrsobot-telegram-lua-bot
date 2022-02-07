@@ -2,7 +2,7 @@
 
 ## Need help?
 
-https://t.me/burrbotsupport
+https://t.me/+fXS45nFRKRE4OWEx
 
 
 ## How it works
