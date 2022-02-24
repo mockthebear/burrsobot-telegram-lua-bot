@@ -138,6 +138,9 @@ extension.onNewChatParticipant = function(msg)
 	if not formatMessage(msg) then 
 		return
 	end
+
+	CheckUserForced(msg.new_chat_participant)
+
 	logMessage(msg, "onNewChatParticipant ")
 
 	--Store user joins

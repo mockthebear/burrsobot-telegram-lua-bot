@@ -276,8 +276,8 @@ function findCommand(msg)
             end
         end
 
-        local entity, which = getEntity(msg)
-
+        local entity, which,a = getEntity(msg)
+        
         local isBotAdmin = which == "user" and isUserBotAdmin(entity.id)
        
         local chatAdminCheck = targetChat == msg.chat.id and msg.chat.id or targetChat
@@ -423,7 +423,11 @@ end
 function cutCommand(str)
 	if str:sub(1,1) == "/" then
 		local begin, nextSpace = str:find("%s")
-		str = str:sub(nextSpace+1, -1)
+		if begin then
+			str = str:sub(nextSpace+1, -1)
+		else
+			return ""
+		end
 	end
 	return str
 end

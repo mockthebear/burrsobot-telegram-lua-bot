@@ -27,14 +27,6 @@ function formatMessage(msg)
         msg.targeted_to_bot = msg.chat.type == "private"
     end
 
-    if msg.from then
-        msg.from.originalUname = msg.from.username
-
-        --msg.from.username2 = (msg.from.username or tostring(msg.from.first_name)..(msg.from.id))
-        if msg.from.username then
-            msg.from.username = msg.from.username:lower()
-        end
-    end
     msg.chat.id = tonumber(msg.chat.id) or 0
 
     local failed = false
@@ -50,8 +42,6 @@ function formatMessage(msg)
     if not CheckChannel(msg) then 
        return false
     end
-
-    checkUsername(msg)
 
     g_msg = msg
     g_chatid = msg.chat.id
@@ -216,7 +206,10 @@ function formatUserHtml(msg)
             end
         end
     end
-
+    if not msg.from.first_name then 
+        say.admin("No name at: "..cjson.encode(msg))
+        say.admin("RRRRRE"..debug.traceback())
+    end
     return ('<a href="tg://user?id='..msg.from.id..'">'..(msg.from.username and ("@"..msg.from.username) or (msg.from.first_name or "?name?"):htmlFix())..'</a>')
 end
 

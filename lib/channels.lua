@@ -91,6 +91,8 @@ function CheckChannel(msg)
             end
         end
 
+        checkUsername(senderObj, "channel", senderObj.username)
+
         SaveChannel(channelObj.id)
     end 
 

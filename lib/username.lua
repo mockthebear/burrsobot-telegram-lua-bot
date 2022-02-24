@@ -1,4 +1,7 @@
 function getUsernameKey(username)
+	if not username then 
+		return nil
+	end
 	local key = g_redis:get("username:"..username)
 	if key == ngx.null then 
 		return nil
@@ -12,34 +15,55 @@ function getUsernameKey(username)
 	return id, which, key
 end
 
-function setUsernameKey(entity)
-	if not entity._tmp then 
-		say.admin("The missing entity data is: <code>"..cjson.encode(entity).."</code>", "HTML")
+function setUsernameKey(entity, forcedType)
+	local usrType = forcedType
+	if not usrType then
+		if not entity._tmp then 
+			say.admin("The missing entity data is: <code>"..cjson.encode(entity).."</code>", "HTML")
+		end
+		usrType = entity._tmp.type
+
 	end
-	local _type = entity._tmp.type
 	if not entity.username then 
 		g_redis:del("username:"..entity.username)
 	else	
-		g_redis:set("username:"..entity.username ,_type..":"..entity.id)
+		g_redis:set("username:"..entity.username ,usrType..":"..entity.id)
 	end
 end
 
 
 
-function checkUsername(msg)
-	local entity, whichReal = getEntity(msg)
-	if entity and entity.username then 
+function checkEntityUsername(msg)
+	local entity, entityType, msgEntity = getEntity(msg)
+	return checkUsername(entity, msgEntity.username)
+end
+
+function checkUsername(entity, whichReal, observedUsername)
+	if entity then 
 		local id, whichStored = getUsernameKey(entity.username)
-		if id == nil then
-			print("Entity ["..whichReal.."] "..entity.id.." now has username: "..entity.username) 
-			setUsernameKey(entity)
+		if id == nil and (entity.username or observedUsername) then
+			entity.username = entity.username or observedUsername
+			print("[Username] Entity ["..whichReal.."] "..entity.id.." now has username: "..entity.username) 
+			setUsernameKey(entity, whichReal)
 			return true, 0
-		elseif id ~= entity.id or whichStored ~= whichReal then 
-			print("Mismatched id with username")
+		elseif id ~= nil and entity.username and (id ~= entity.id or whichStored ~= whichReal) then 
+			print("[Username] Mismatched id with type > "..cjson.encode({id, entity.id}).." -- "..cjson.encode({whichStored, whichReal}))
 			g_redis:del(whichStored..":"..entity.username)
 			setUsernameKey(entity)
+			SaveUser(id)
+			return true, 1
+		elseif observedUsername and observedUsername ~= entity.username then 
+			print("[Username] Changed username > "..cjson.encode({entity.username, observedUsername}))
+			if entity.username then
+				g_redis:del(whichReal..":"..entity.username)
+				g_redis:del(whichStored..":"..entity.username)
+			end
+			entity.username = observedUsername
+			setUsernameKey(entity)
+			SaveUser(id)
 			return true, 1
 		else 
+			--print('Username: '..entity.username.." is fine because stored is "..whichStored)
 			--Username is fine
 			return true, nil
 		end

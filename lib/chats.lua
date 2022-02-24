@@ -9,11 +9,10 @@ function formatChatMessage(msg)
     chatObj.title = msg.chat.title
     chatObj.type = msg.chat.type
     chatObj.invite_link = msg.chat.invite_link
+    local prev = chatObj.last_message
     chatObj.last_message = os.time()
 
 
-
-        
     g_lang = getUserLang(msg) 
     
     msg.isChat = true
@@ -22,25 +21,43 @@ function formatChatMessage(msg)
         chatObj._tmp.users[msg.from.id] = msg.from
     end
 
-    if not tonumber(chatObj.data.countcd2) then 
-        chatObj.data.countcd2 = 0
-    end
-    if not chatObj.data.mc or (not chatObj.data.countcd2 or chatObj.data.countcd2 <= os.time()) then
-        local cc = bot.getChatMembersCount(msg.chat.id)
-        if cc.ok then 
-            chatObj.data.mc = cc.result
-        else 
-            chatObj.data.mc = 1
-        end
-        chatObj.data.countcd2 = os.time() + 20 * 60
+    chatObj.data.message_count = (chatObj.data.message_count or 0)+1
+
+    checkChatStats(chatObj)
+
+    if not prev or prev+3600 < os.time() then 
+        SaveChat(msg.chat.id)
     end
 
-    
     checkCacheChatAdmins(msg)
-   
 end
 
-function  checkCacheChatAdmins(msg, chatOverride)
+function checkChatStats(chatObj)
+    if not chatObj.data.member_count or  (chatObj.data.auto_update or 0) <= os.time() then
+        local cc = bot.getChatMembersCount(chatObj.id)
+        if cc.ok then 
+            chatObj.data.member_count = cc.result
+        else 
+            chatObj.data.member_count = 1
+        end
+        chatObj.data.auto_update = os.time() + 60*2
+        SaveChat(chatObj.id)
+    end
+end
+
+function listOldChats(diff)
+    local res = {}
+    for id, chatObj in pairs(chats) do 
+        if not chatObj.last_message or chatObj.last_message + diff < os.time() then 
+            res[#res+1] = chatObj
+        end
+    end
+    return res
+end
+
+
+
+function checkCacheChatAdmins(msg, chatOverride)
     if msg.chat.type ~= "private" then
         local chatObj = chats[chatOverride or msg.chat.id]
         if chatObj and ((chatObj._tmp.adms_cache or 0 ) <= os.time()) then
@@ -80,8 +97,7 @@ function CheckChat(msg)
     local isNewChat = false
 	if msg.chat.type == "group" or msg.chat.type == "supergroup" then 
         if not chats[msg.chat.id] then
-            
-
+        
             local newChat = {
                 name = msg.chat.title, 
                 title=msg.chat.title, 
@@ -110,8 +126,11 @@ function CheckChat(msg)
             else 
                 isNewChat = true
             end
+
             SaveChat(id)
         end
+        checkUsername(msg.chat, "chat", msg.chat.username)
+
         formatChatMessage(msg)
     end
 

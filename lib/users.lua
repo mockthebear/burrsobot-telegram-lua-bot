@@ -125,6 +125,13 @@ end
 
 getUserById = getUser 
 
+function CheckUserForced(userFrom, chatObj)
+    local msg = {}
+    msg.from = userFrom
+    msg.chat = chatObj
+    return CheckUser(msg)
+end
+
 function CheckUser(msg, isNew)
     if msg.sender_chat then 
         return true
@@ -190,7 +197,6 @@ function CheckUser(msg, isNew)
         end
 
         if msg.isChat then
-
             if not userObj.joinDate[msg.chat.id] then 
                 userObj.joinDate[msg.chat.id] = tonumber(msg.date) - 3600
                 print(msg.from.first_name.." joins chat "..msg.chat.title.." at "..msg.date) 
@@ -199,7 +205,7 @@ function CheckUser(msg, isNew)
         end
     end
 
-
+    checkUsername(userObj, "user", msg.from.username)
 
     if userObj.first_name == nil or userObj.first_name~=msg.from.first_name then 
         userObj.first_name = msg.from.first_name:gsub("[#@\"]", "")

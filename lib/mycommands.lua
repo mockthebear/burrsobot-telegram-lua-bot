@@ -116,7 +116,7 @@ function SetupMyCommands()
 				end
 				if len > 0 then 
 					chats[chatid].data.changedCommand = true
-					return
+					SaveChat(chatid)
 				end
 			end
 		end

@@ -4,19 +4,24 @@ function getEntity(msg)
 		local id = msgfrom.id
 		if id == 136817688 then 
 			--Then is a sender chat:
-			return getEntityById(msg.sender_chat.id)
+			local usr, which = getEntityById(msg.sender_chat.id)
+			return usr, which, msg.sender_chat
 		end
 		if id == 777000 then 
 			--Administrator!
-			return getEntityById(msg.sender_chat.id)
+			local usr, which =getEntityById(msg.sender_chat.id)
+			return usr, which, msg.sender_chat
 		end
 		if id == 1087968824 then 
 			--Administrator!
-			return getEntityById((msg.sender_chat or msg.new_chat_member.user).id)
+			local usr, which =getEntityById((msg.sender_chat or msg.new_chat_member.user).id)
+			return usr, which, msg.sender_chat or msg.new_chat_member.user
 		end
-		return getEntityById(id)
+		local usr, which = getEntityById(id)
+		return usr, which, msgfrom
 	elseif msg.sender_chat then
-		return getEntityById(msg.sender_chat.id)
+		local usr, which = getEntityById(msg.sender_chat.id)
+		return usr, which, msg.sender_chat
 	end
 end
 

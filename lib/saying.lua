@@ -219,20 +219,9 @@ function includeUpdate(msg)
         metaUpdate.__index = function(  )
             return nil
         end
-        metaUpdate.__call  = function( myself, imsg, text, parse, web, markup )
-            updateMessage(imsg, text, parse, web, markup )
+        metaUpdate.__call  = function( myself, text, parse, web, markup )
+            updateMessage(msg, text, parse, web, markup )
         end
-
-        local metaReply = {}
-        setmetatable( msg.update , metaReply )
-        metaReply.__index = function(  )
-            return nil
-        end
-
-        metaReply.__call  = function( myself, imsg, text, parse, disable_web_page_preview, disable_notification, reply_markup )
-            bot.sendMessage(msg.result.chat.id ,text, parse,disable_web_page_preview,disable_notification, msg.result.message_id, reply_markup)
-        end
-
     end
     return msg
 end
