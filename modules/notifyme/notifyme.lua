@@ -30,7 +30,7 @@ function notifyme.notifyWord(user, msg, word)
             return true
         end 
     end
-    return false
+    return falsehasWarn
 end
 
 function notifyme.onTextReceive(msg)
@@ -41,6 +41,15 @@ function notifyme.onTextReceive(msg)
     if chats[msg.chat.id].data.warnWords then 
         hasWarn = chats[msg.chat.id].data.warnWords
     end
+    if type(chats[msg.chat.id].data.warnWords) == "string" then 
+        chats[msg.chat.id].data.warnWords = unformatFromJson(chats[msg.chat.id].data.warnWords)
+    end
+    if hasWarn == "{}" then 
+        hasWarn = {}
+        chats[msg.chat.id].data.warnWords = {}
+        SaveChat(msg.chat.id)
+    end
+
     local notified = {}
 
     local kek = msg.text
@@ -59,6 +68,7 @@ function notifyme.onTextReceive(msg)
         if hasWarn and hasWarn[word] then 
             local userList = hasWarn[word]
             local nonAuth = ""
+
             for user, i in pairs(userList) do 
             
                 if user ~= msg.from.id and not notified[user] and users[msg.from.id] then 
