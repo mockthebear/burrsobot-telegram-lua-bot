@@ -117,8 +117,8 @@ end
 
 
 function chatcontrol.loadCommands()
-	addCommand( {"chat"}		, MODE_FREE,  getModulePath().."/chat.lua", 2 , "chatcontrol-desc" )
-	addCommand( {"groupphoto"}		, MODE_FREE,  getModulePath().."/groupphoto.lua", 2 , "chatcontrol-groupphoto" )
+	addCommand( {"chat"}		, MODE_ONLY_ADM,  getModulePath().."/chat.lua", 2 , "chatcontrol-desc" )
+	addCommand( {"groupphoto"}		, MODE_CHATADMS,  getModulePath().."/groupphoto.lua", 2 , "chatcontrol-groupphoto" )
 end
 
 function chatcontrol.loadTranslation()
