@@ -55,6 +55,29 @@ function listOldChats(diff)
     return res
 end
 
+function processLeaveOld()
+    local kek = listOldChats(3600 * 24 * 60)
+    local msg = ""
+    for i,b in pairs(kek) do 
+        b.last_message = b.last_message or 0
+        print("Can leave ["..b.title.."] diff: "..(os.time()-b.last_message).."?")
+        local r = io.read()
+        if r == 'y' then
+            deleteChat(b.id)
+        else 
+            if r == 's' then 
+                return
+            end
+            if r == 'p' then 
+            
+                b.last_message = os.time()
+                SaveChat(b.id)
+                local res = bot.sendMessage(b.id, "Ping?", "HTML")
+                print(cjson.encode(res))
+            end
+        end
+    end
+end
 
 
 function checkCacheChatAdmins(msg, chatOverride)

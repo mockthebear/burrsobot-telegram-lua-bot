@@ -148,7 +148,7 @@ function entitiesToHTML(msg)
         if b.type ~= "bot_command" and b.type ~= "mention" and b.type ~= "hashtag" and b.type ~= "url" then
             for a,c in pairs(msg.entities or msg.caption_entities) do
                 if i ~= a and not sections[a] and not sections[i] then
-                    if c.type ~= "hashtag" and c.type ~= "url" then
+                    if c.type ~= "hashtag" and c.type ~= "url" and c.type ~= "mention" then
                         if b.offset >= c.offset and (b.offset +b.length) <= (c.offset+c.length) then 
                             sections[a] = 1
                             sections[i] = 1
