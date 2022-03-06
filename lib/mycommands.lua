@@ -89,23 +89,27 @@ function SetupMyCommands()
 
 		populateCommands(allCommands)
 
-		local selCommands = listCommandsData({MODE_FREE})
+		local selCommands = listCommandsData({MODE_FREE, MODE_PRIVATEONLY})
 		bot.deleteMyCommands(cjson.encode({type="all_private_chats"}))  
 		bot.deleteMyCommands(cjson.encode({type="all_private_chats"}), "pt")  
-		bot.deleteMyCommands(cjson.encode({type="all_private_chats"}), "en")  
+		bot.deleteMyCommands(cjson.encode({type="all_private_chats"}), "en")   
 		setCommandContextAutoLanguage(selCommands, "all_private_chats")
 
 
 		selCommands = listCommandsData({MODE_FREE, MODE_CHATONLY})
-		setCommandContextAutoLanguage(selCommands, "all_group_chats")
+		
 		bot.deleteMyCommands(cjson.encode({type="all_group_chats"}), "pt")  
 		bot.deleteMyCommands(cjson.encode({type="all_group_chats"}), "en")  
+		bot.deleteMyCommands(cjson.encode({type="all_group_chats"}))  
+		setCommandContextAutoLanguage(selCommands, "all_group_chats")
 
 
 		selCommands = listCommandsData({MODE_FREE, MODE_CHATONLY, MODE_CHATADMS})
-		setCommandContextAutoLanguage(selCommands, "all_chat_administrators")
+		
 		bot.deleteMyCommands(cjson.encode({type="all_chat_administrators"}), "pt")  
 		bot.deleteMyCommands(cjson.encode({type="all_chat_administrators"}), "en") 
+		bot.deleteMyCommands(cjson.encode({type="all_chat_administrators"})) 
+		setCommandContextAutoLanguage(selCommands, "all_chat_administrators")
 
 
 		for chatid,b in pairs(chats) do
@@ -124,16 +128,16 @@ function SetupMyCommands()
 end
 
 function wipeCommandas(chatid, userid)
-	local valid = {"chat_member", "chat", "chat_administrators"}
+	local valid = {"chat_member", "chat", "chat_administrators",  "all_chat_administrators", "all_group_chats", "all_private_chats", "default"}
 	for _, mode in pairs(valid) do 
 		bot.deleteMyCommands(cjson.encode({type=mode, chat_id=chatid, user_id=userid}))  
 	end
 end
 
-function inspectCommands(chatid, userid)
+function inspectCommands(chatid, userid, language)
 	local valid = {"chat_member", "chat", "chat_administrators",  "all_chat_administrators", "all_group_chats", "all_private_chats", "default"}
 	for _, mode in pairs(valid) do 
-		local resp = bot.getMyCommands(cjson.encode({type=mode, chat_id=chatid, user_id=userid}))  
+		local resp = bot.getMyCommands(cjson.encode({type=mode, chat_id=chatid, user_id=userid}), language)  
 		if resp.ok then 
 			local result = resp.result
 			local str = ""
@@ -182,6 +186,8 @@ function updateCommandListInChat(chatid)
 end
 
 
+
+
 function setCommandContextAutoLanguage(selCommands, context, chatid, userid)
 	for indx, lang in pairs(g_locale.langs) do
 		local previousLang = g_lang
@@ -217,9 +223,9 @@ function setCommandsToContext(commands, context, wordIndex, chatid, userid, lang
 	end
 
 	local mode = context
-	local res = bot.setMyCommands(cjson.encode(commandList), cjson.encode({type=mode, chat_id=chatid, user_id=user_id}))
+	local res = bot.setMyCommands(cjson.encode(commandList), cjson.encode({type=mode, chat_id=chatid, user_id=user_id}), languageCode)
 	if res.ok then 
-		print("[My commands] Set "..(#commandList).." commands on language "..tostring(languageCode).." to "..mode)
+		print("[My commands] Set "..(#commandList).." commands on language "..tostring(languageCode).." to "..mode.." = "..cjson.encode(res))
 		return true
 	else 
 		if res.error_code == 429 then 
