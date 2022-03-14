@@ -96,6 +96,7 @@ sudo apt-get -y install software-properties-common
 sudo add-apt-repository -y "deb http://openresty.org/package/ubuntu $(lsb_release -sc) main"
 sudo apt-get update
 sudo apt-get install openresty
+opm get pintsized/lua-resty-http
 ``` 
 
 ### Redis
@@ -107,6 +108,7 @@ sudo apt-get install redis-server
 ```
 sudo apt-get install lua-sql-sqlite3
 ```
+
 
 ## Setting up
 
@@ -133,7 +135,32 @@ Edit the config.lua including your telegramid and the bot token.
 resty burrbot.lua
 ```
 
-## Aditional modules
+## Possible errors
+
+If you find yourself with this error:
+```
+ERROR: lib/dblib.lua:5: module 'luasql.sqlite3' not found:
+	no field package.preload['luasql.sqlite3']
+	no file '/usr/local/openresty/site/lualib/luasql/sqlite3.ljbc'
+	no file '/usr/local/openresty/site/lualib/luasql/sqlite3/init.ljbc'
+```
+Might be a problem with the paths of your machine. Usually when you install luasql it should be visible for openresty...
+But if not you can run those two lines. 
+First make sure to be in the path of the bot
+```
+cd burrsobot-telegram-lua-bot
+```
+Then:
+```
+mkdir luasql
+cp /usr/lib/x86_64-linux-gnu/lua/5.1/luasql/sqlite3.so luasql/sqlite3.so
+```
+
+Or add this single lua line in to the second line of `burrbot.lua`:
+```
+package.cpath = package.cpath .. "
+``` 
+## Aditional modules```
 Some modules of the bot like the botprotection and the text to speech need some external stuff.
 
 > imagick
