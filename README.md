@@ -103,6 +103,11 @@ sudo apt-get install openresty
 sudo apt-get install redis-server
 ```
 
+### Luasql 
+```
+sudo apt-get install lua-sql-sqlite3
+```
+
 ## Setting up
 
 First, set up your redis server
