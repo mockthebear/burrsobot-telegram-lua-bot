@@ -158,7 +158,7 @@ cp /usr/lib/x86_64-linux-gnu/lua/5.1/luasql/sqlite3.so luasql/sqlite3.so
 
 Or add this single lua line in to the second line of `burrbot.lua`:
 ```
-package.cpath = package.cpath .. "
+package.cpath = package.cpath .. "/usr/lib/x86_64-linux-gnu/lua/5.1/?.so"
 ``` 
 ## Aditional modules```
 Some modules of the bot like the botprotection and the text to speech need some external stuff.
