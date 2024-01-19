@@ -73,13 +73,16 @@ end
 
 --[ONCE] runs when eveything is ready
 function pubsub.ready()
-	local valid = listCommandsData({MODE_FREE})
+	local valid = listCommandsData({MODE_FREE, MODE_CHATONLY})
 	local values = {}
 	local cdvalues = {}
 	for i,b in pairs(valid) do 
 		values[thisOrFirst(b.words)] = "boolean"
 		cdvalues[thisOrFirst(b.words)] = b.cooldown
 	end
+
+	--pubsub.registerExternalVariable("chat", "memes", {type="tuple", valid={ head="*", tail={"Ban", "Kick", "Delete", "Mute 60s", "Mute 10 min", "Mute 1h"} }}, true, "Sussy baka", "SUS")
+
 
 	pubsub.registerExternalVariable("chat", "disabledc", {type="list_boolean_not", valid=values}, true, "Enabled commands", "Commands", {["ON"]= "Disabled", ["OFF"] = "Enabled", [".head"] = "/"}, function(chatid)
 		if chats[chatid] then
@@ -110,8 +113,25 @@ function pubsub.onCallbackQueryReceive(msg)
 			local tok = pubsub.generateChatToken(msg.message.chat.id, msg.from.id, msg.from.first_name)
 			if users[msg.from.id] and users[msg.from.id].private then 
 				bot.answerCallbackQuery(msg.id, "Access link was sent on your private", "true")
-				bot.sendMessage(msg.from.id, "Access link: "..tok, "HTML")
-				say.admin("Painel open for: "..msg.message.chat.title)
+
+			    local tok = pubsub.generateChatToken(msg.message.chat.id, msg.from.id, msg.from.first_name)
+
+			    local keyb = {}	
+				local JSON = require("JSON")
+				keyb[1] = {}
+				keyb[2] = {}
+				keyb[1][1] = { text = "Open panel", selective=true, web_app = {url=tok}} 
+				keyb[2][1] = { text = "Open in browser", url=tok} 
+
+				local kb2 = JSON:encode({inline_keyboard = keyb })
+
+				local res = bot.sendMessage(msg.from.id, "Panel to chat "..msg.message.chat.title, "HTML", true, false, msg.message_id, kb2)
+				if not res.ok then 
+				  reply(Dump(res))
+				end
+
+				--bot.sendMessage(msg.from.id, "Access link: "..tok, "HTML")
+				--say.admin("Painel open for: "..msg.message.chat.title)
 			else 
 				deploy_answerCallbackQuery(msg.id, "I cant send private messages to you, please send me a /start on private", "true")
 			end
@@ -136,12 +156,15 @@ function pubsub.frame()
     	local message = cjson.decode(data)
     	local messageid = message.id
 
-
+    	if type(message.fromname) ~= "string" then 
+	    	message.fromname = "?"
+	    end
     	if message.type == "chat" then 
     		local chatid = tonumber(message.chat or 0)
     		local key = message.key
     		local val = message.value
     		local index = message.index
+    		local notify = message.notify
     		if chats[chatid] then 
     			local allowed, restriction = pubsub.isSettingAllowed("chat", key)
     			if allowed then 
@@ -152,8 +175,9 @@ function pubsub.frame()
     				else 
     					local valid = true
 	    				if pubsub.callback[key] then 
-	    					local res, proceed = pcall(pubsub.callback[key], chatid, key, index)
+	    					local res, proceed = pcall(pubsub.callback[key], chatid, key, index, val)
 	    					if not res or not proceed then 
+	    						print("Error: "..tostring(proceed))
 	    						pubsub.replyMessageId(messageid, "Not ok")
 	    						return
 	    					end
@@ -165,38 +189,52 @@ function pubsub.frame()
     						local oldVal = chats[chatid].data[key][index]
 	    					chats[chatid].data[key][index] = val
 
-	    					local stat = bot.sendMessage(chatid, "Altered <b>"..restriction.description.."</b> by "..formatUserHtml({id=message.fromid, first_name=message.fromname}).." to:\n\n"
-	    						..pubsub.formatAlias( ".head", restriction, true )..index.." -> "..pubsub.formatOutput(val, restriction), "HTML")
-	    					if stat.ok then
-	    						pubsub.replyMessageId(messageid, "OK")
-	    					else 
-	    						chats[chatid].data[key][index] = oldVal
-	    						pubsub.replyMessageId(messageid, stat.description)
-	    					end
+	    					if notify == "on" or notify == "true" then
+
+		    					local stat = bot.sendMessage(chatid, "Altered <b>"..restriction.description.."</b> by "..formatUserHtml({id=message.fromid, first_name=message.fromname}).." to:\n\n"
+		    						..pubsub.formatAlias( ".head", restriction, true )..index.." -> "..pubsub.formatOutput(val, restriction), "HTML")
+		    					if stat.ok then
+		    						pubsub.replyMessageId(messageid, "OK")
+		    					else 
+		    						chats[chatid].data[key][index] = oldVal
+		    						pubsub.replyMessageId(messageid, stat.description)
+		    					end
+		    				else 
+		    					pubsub.replyMessageId(messageid, "OK")
+		    				end
 	    				elseif restriction.accept and restriction.accept.type == "list_number" then 
     						local oldVal = chats[chatid].data[key][index]
     						if not chats[chatid].data[key] then 
     							chats[chatid].data[key] = {}
     						end
 	    					chats[chatid].data[key][index] = val
-	    					local stat = bot.sendMessage(chatid, "Altered <b>"..restriction.description.."</b> by "..formatUserHtml({id=message.fromid, first_name=message.fromname}).." to:\n\n"
-	    						..pubsub.formatAlias( ".head", restriction, true )..index.." -> "..pubsub.formatOutput(val, restriction), "HTML")
-	    					if stat.ok then
-	    						pubsub.replyMessageId(messageid, "OK")
-	    					else 
-	    						chats[chatid].data[key][index] = oldVal
-	    						pubsub.replyMessageId(messageid, stat.description)
-	    					end
+
+	    					if notify == "on" or notify == "true" then
+		    					local stat = bot.sendMessage(chatid, "Altered <b>"..restriction.description.."</b> by "..formatUserHtml({id=message.fromid, first_name=message.fromname}).." to:\n\n"
+		    						..pubsub.formatAlias( ".head", restriction, true )..index.." -> "..pubsub.formatOutput(val, restriction), "HTML")
+		    					if stat.ok then
+		    						pubsub.replyMessageId(messageid, "OK")
+		    					else 
+		    						chats[chatid].data[key][index] = oldVal
+		    						pubsub.replyMessageId(messageid, stat.description)
+		    					end
+		    				else 
+		    					pubsub.replyMessageId(messageid, "OK")
+		    				end
     					else
 	    					local oldVal = chats[chatid].data[key]
 	    					chats[chatid].data[key] = val
-	    					local stat = bot.sendMessage(chatid, "Altered <b>"..restriction.description.."</b> by "..formatUserHtml({id=message.fromid, first_name=message.fromname}).." to:\n\n"..pubsub.formatAlias( ".head", restriction, true )..pubsub.formatOutput(val, restriction), "HTML")
-	    					if stat.ok then
-	    						pubsub.replyMessageId(messageid, "OK")
-	    					else 
-	    						chats[chatid].data[key] = oldVal
-	    						pubsub.replyMessageId(messageid, stat.description)
-	    					end
+	    					if notify == "on" or notify == "true" then
+	    						local stat = bot.sendMessage(chatid, "Altered <b>"..restriction.description.."</b> by "..formatUserHtml({id=message.fromid, first_name=message.fromname}).." to:\n\n"..pubsub.formatAlias( ".head", restriction, true )..pubsub.formatOutput(val, restriction), "HTML")
+		    					if stat.ok then
+		    						pubsub.replyMessageId(messageid, "OK")
+		    					else 
+		    						chats[chatid].data[key] = oldVal
+		    						pubsub.replyMessageId(messageid, stat.description)
+		    					end
+		    				else 
+		    					pubsub.replyMessageId(messageid, "OK")
+		    				end
 	    				end
     					SaveChat(chatid)
     				end

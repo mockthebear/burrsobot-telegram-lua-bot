@@ -89,8 +89,10 @@ function joinlock.onNewChatParticipant(msg)
 
 			local keyb = {}
 		    keyb[1] = {}
+		    keyb[2] = {}
 
 		    keyb[1][1] = { text = tr("joinlock-release"), callback_data = "joinlock:release:"..msg.new_chat_participant.id..":"..msg.chat.id} 
+		    keyb[2][1] = { text = tr("joinlock-ban"), callback_data = "joinlock:ban:"..msg.new_chat_participant.id..":"..msg.chat.id} 
 
 
 		    local kb = cjson.encode({inline_keyboard = keyb })
@@ -138,7 +140,19 @@ function joinlock.onCallbackQueryReceive(msg)
 					bot.answerCallbackQuery(msg.id, tr("joinlock-onlyadm"), "true")
 				end
 			end
+		elseif msg.data:match("joinlock:ban:(%d+):([%d%-]+)") then
+			local id, chat = msg.data:match("joinlock:ban:(%d+):([%d%-]+)")
+			chat = tonumber(chat)
+			id = tonumber(id)
+			if chats[chat] and isUserChatAdmin(chat, msg.from.id) or isUserBotAdmin(msg.from.id)  then
+				deploy_deleteMessage(chat, msg.message.message_id)
+				deploy_answerCallbackQuery(msg.id, "BANNED!", "true")
+				
 
+				bot.kickChatMember(chat, id , -1)
+				g_chatid = chat
+				say.delete("Banned user "..(users[id].first_name or "?")..' ('..id..')')
+			end
 		end
 	end
 end
@@ -151,6 +165,8 @@ function joinlock.loadTranslation()
 	g_locale[LANG_US]["joinlock-release"] = "Release user"
 	g_locale[LANG_BR]["joinlock-release"] = "Liberar usuário"
 
+	g_locale[LANG_US]["joinlock-ban"] = "Ban user"
+	g_locale[LANG_BR]["joinlock-ban"] = "Banir usuário"
 
 	g_locale[LANG_US]["joinlock-onlyadm"] = "Sorry, thats only for chat admin"
 	g_locale[LANG_BR]["joinlock-onlyadm"] = "Desculpa, só admins do chat."

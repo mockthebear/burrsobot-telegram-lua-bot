@@ -87,6 +87,11 @@ function getUserByUsername(uname)
 	if not uname then 
 		return nil
 	end
+	if uname:sub(1,1) == "@" then 
+		print("sube")
+		uname = uname:sub(2, -1)
+		print(uname)
+	end
     local id, which, key = getUsernameKey(uname:lower())
     if not id or which ~= "user" then 
     	return nil

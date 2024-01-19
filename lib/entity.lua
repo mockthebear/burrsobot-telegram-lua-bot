@@ -2,20 +2,23 @@ function getEntity(msg)
 	local msgfrom = msg.from
 	if msgfrom then 
 		local id = msgfrom.id
-		if id == 136817688 then 
-			--Then is a sender chat:
-			local usr, which = getEntityById(msg.sender_chat.id)
-			return usr, which, msg.sender_chat
-		end
-		if id == 777000 then 
-			--Administrator!
-			local usr, which =getEntityById(msg.sender_chat.id)
-			return usr, which, msg.sender_chat
-		end
-		if id == 1087968824 then 
-			--Administrator!
-			local usr, which =getEntityById((msg.sender_chat or msg.new_chat_member.user).id)
-			return usr, which, msg.sender_chat or msg.new_chat_member.user
+		if msg.sender_chat then
+			if id == 136817688 then 
+				--Then is a sender chat:
+
+				local usr, which = getEntityById(msg.sender_chat.id)
+				return usr, which, msg.sender_chat
+			end
+			if id == 777000 then 
+				--Administrator!
+				local usr, which =getEntityById(msg.sender_chat.id)
+				return usr, which, msg.sender_chat
+			end
+			if id == 1087968824 then 
+				--Administrator!
+				local usr, which =getEntityById((msg.sender_chat or msg.new_chat_member.user).id)
+				return usr, which, msg.sender_chat or msg.new_chat_member.user
+			end
 		end
 		local usr, which = getEntityById(id)
 		return usr, which, msgfrom
@@ -81,7 +84,7 @@ end
 
 
 function SaveEntity(id) 
-	local ent, which = getEntity(msg)
+	local ent, which = getEntity({from=id})
 	if not ent then 
 		return false
 	end

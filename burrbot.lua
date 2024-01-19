@@ -127,7 +127,6 @@ extension.onLeftChatParticipant = function(msg)
 end
 
 extension.onNewChatParticipant = function(msg)
-
 	if (msg.date - os.time()) < -10 then 
         return false
     end
@@ -370,6 +369,7 @@ extension.onTextReceive = function (msg)
 	 
 	if msg.chat.type == "private" then 
 		print((msg.chat.type ~= "private" and ("["..msg.chat.title.."] ")   or " ") ..msg.from.id.." "..msg.from.first_name..": "..msg.text)
+		
 	end
 
 	if not formatMessage(msg) then 
@@ -378,6 +378,7 @@ extension.onTextReceive = function (msg)
 
 	if msg.text:sub(1,1) == "/" then
 		print("[COMMAND] {"..msg.chat.type ..  (msg.chat.type ~= "private" and (" : "..msg.chat.title)   or "") .." : "..msg.chat.id.."} "..(msg.from.username and ("@"..msg.from.username) or msg.from.first_name)..": "..msg.text)
+    	deploy_setMessageReaction(msg.chat.id, msg.message_id, {{type="emoji",  emoji="👀"}}, true)
     	logText("commands", os.date("%d/%m/%y %H:%M:%S",os.time()).." command=\""..msg.text.."\" by="..msg.chat.id.." name=\""..msg.from.first_name.."\" username=\""..(msg.from.username or "-").."\" at=\"".. (msg.chat.type ~= "private" and (msg.chat.title)   or msg.chat.type).."\" chatid="..msg.chat.id.."\n")
 	end
 
@@ -392,6 +393,12 @@ extension.onTextReceive = function (msg)
 		reply("Error: "..tostring(err))
 		say.admin("Error:"..err.." as: "..msg.text.." on "..(msg.chat.type == "private" and "private" or msg.chat.title))
 		return
+	end
+
+	if not ranCommand then 
+		if msg.chat.type == "private" then 
+			bot.sendMessage(5146565303, 'From: '..formatUserHtml(msg.from).." ("..msg.from.id..") Message id: "..msg.message_id.."\n: "..msg.text:htmlFix(), "HTML")
+		end
 	end
 
 	if msg.isChat then
@@ -481,7 +488,7 @@ SetupMyCommands()
 print("Ready")
 
 function protectedCallBot()
-	extension.run(100,nil,onRunner)
+	extension.run(1000,nil,onRunner)
 end
 
 local f,err = xpcall(protectedCallBot, debug.traceback)

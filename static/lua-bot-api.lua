@@ -24,7 +24,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 
 local encode = require("multipart.multipart-post").encode
-local JSON = require("JSON")
+
 local cjson = require("cjson")
 
  
@@ -39,54 +39,7 @@ local C = {} -- Configure Constructor
 
 M.g_updates = 0
 M.offset = 0
--- JSON Error handlers
-function JSON:onDecodeError(message, text, location, etc)
-  if text then
-    if location then
-      message = string.format("%s at char %d of: %s", message, location, text)
-    else
-      message = string.format("%s: %s", message, text)
-    end
-  end
-  --print((os.date("%x %X")), "Error while decoding JSON:\n", message)
-  local datefile = os.date("%d-%m-%Y.txt")
-  print((os.date("%x %X")), "Error: decode JSON, logged in ".. datefile)
-  local log = io.open("errors/" .. datefile,"a+") -- open log
-  log:write((os.date("%x %X")), "Error while decoding JSON:\n", message .. "\n") -- write in log
-  log:close()
-          
-end
 
-function JSON:onDecodeOfHTMLError(message, text, _nil, etc)
-  if text then
-    if location then
-      message = string.format("%s at char %d of: %s", message, location, text)
-    else
-      message = string.format("%s: %s", message, text)
-    end
-  end
-  --print((os.date("%x %X")), "Error while decoding JSON [HTML]:\n", message)
-  local datefile = os.date("%d-%m-%Y.txt")
-  print((os.date("%x %X")), "Error: decode JSON [HTML], logged in ".. datefile)
-  local log = io.open("errors/" .. datefile,"a+") -- open log
-  log:write((os.date("%x %X")), "Error while decoding JSON [HTML]:\n", message .. "\n") -- write in log
-  log:close()
-end
-
-function JSON:onDecodeOfNilError(message, _nil, _nil, etc)
-  if text then
-    if location then
-      message = string.format("%s at char %d of: %s", message, location, text)
-    else
-      message = string.format("%s: %s", message, text)
-    end
-  end
-  print((os.date("%x %X")), "Error while decoding JSON [nil]:\n", message)
-end
-
-function JSON:onEncodeError(message, etc)
-  print((os.date("%x %X")), "Error while encoding JSON:\n", message)
-end
 
 -- configure and initialize bot
 local function configure(token)
@@ -171,14 +124,16 @@ function run_scheduled()
     end
   end
 end
-
+ 
 
 function makeRequest(method, body_arg, forceHttpConn, disableSchedule)
+  local pre = ngx.now()
   local body, boundary = encode(body_arg)
 
-  local connModule = getHttpConnection(true)
-
-  local pre = ngx.now()
+  local connModule = getHttpConnection(false)  
+  io.write("Calling: "..method)
+  local post = ngx.now() - pre
+  io.write(" precall in "..post)
 
   local res, err,a,c = connModule:request_uri("https://api.telegram.org/bot"..M.token.."/" .. method, {
       method = "POST",
@@ -190,9 +145,13 @@ function makeRequest(method, body_arg, forceHttpConn, disableSchedule)
       },
   })
   
-  connModule:close()
+  
 
   local post = ngx.now() - pre 
+	io.write(" finished in "..post)
+  connModule:close()
+  post = ngx.now() - pre 
+  print(" closed in "..post.." at ")
   M.requests[(M.requestCounter%10) + 1] = post
   M.requestCounter = M.requestCounter + 1
   
@@ -203,10 +162,10 @@ function makeRequest(method, body_arg, forceHttpConn, disableSchedule)
     ngx.log(ngx.ERR, "request failed: ", err)
     local r = {
       success = "false",
-      code = res.status or "0",
+      code = "0",
       headers =  {"no headers"},
-      status = res.status or "0",
-      body = '{"no response"}',
+      status = "0",
+      body = '{"error:": no response"}',
     }
     return r
   end
@@ -229,6 +188,8 @@ function makeRequest(method, body_arg, forceHttpConn, disableSchedule)
   return r
   
 end
+
+M.makeRequest = makeRequest
 
 local function getFile(file_id)
 
@@ -304,7 +265,7 @@ local function downloadFile(file_id, download_path)
     end
 
     if res.status ~= 200 then 
-      return JSON:decode(res.body)
+      return cjson.decode(res.body)
     end
 
     connModule:close()  
@@ -341,7 +302,7 @@ local function generateReplyKeyboardMarkup(keyboard, resize_keyboard, one_time_k
   response.selective = selective
 
 
-  local responseString = JSON:encode(response)
+  local responseString = cjson.encode(response)
   return responseString
 end
 
@@ -355,7 +316,7 @@ local function generateReplyKeyboardHide(hide_keyboard, selective)
   response.hide_keyboard = true
   response.selective = selective
 
-  local responseString = JSON:encode(response)
+  local responseString = cjson.encode(response)
   return responseString
 end
 
@@ -369,7 +330,7 @@ local function generateForceReply(force_reply, selective)
   response.force_reply = true
   response.selective = selective
 
-  local responseString = JSON:encode(response)
+  local responseString = cjson.encode(response)
   return responseString
 end
 
@@ -435,6 +396,8 @@ local function sendMessage(chat_id, text, parse_mode, disable_web_page_preview, 
   request_body.disable_notification = tostring(disable_notification)
   request_body.reply_to_message_id = tonumber(reply_to_message_id)
   request_body.reply_markup = reply_markup or ""
+
+  
 
   local response = makeRequest("sendMessage",request_body)
 
@@ -536,6 +499,28 @@ local function approveChatJoinRequest(chat_id, user_id)
 end
 
 M.approveChatJoinRequest = approveChatJoinRequest
+
+
+local function setMessageReaction(chat_id, message_id, reaction, is_big)
+
+   local request_body = {}
+
+  request_body.chat_id = chat_id
+  request_body.message_id = message_id
+  request_body.reaction = cjson.encode(reaction)
+  request_body.is_big = is_big
+
+
+  local response = makeRequest("setMessageReaction",request_body)
+
+  if (response.success == 1) then
+    return response.body
+  else
+    return nil, "Request Error"
+  end
+end
+
+M.setMessageReaction = setMessageReaction
 
 local function declineChatJoinRequest(chat_id, user_id)
 
@@ -1159,7 +1144,7 @@ local function answerInlineQuery(inline_query_id, results, cache_time, is_person
   local request_body = {}
 
   request_body.inline_query_id = tostring(inline_query_id)
-  request_body.results = JSON:encode(results)
+  request_body.results = cjson.encode(results)
   request_body.cache_time = tonumber(cache_time)
   request_body.is_personal = tostring(is_personal)
   request_body.next_offset = tostring(next_offset)
@@ -1717,16 +1702,25 @@ local function processFrame(obj, limit, timeout, rst, n, hook)
     if not ret then
       print("Errrr",updates)
     else
+      local updateCount = 0
       if(updates) then
         if (updates.result) then
+          
           for key, update in pairs(updates.result) do
-
+            updateCount = updateCount +1
             obj.g_updates = obj.g_updates +1
             parseUpdateCallbacks(update)
             obj.offset = update.update_id + 1
             if hook then hook() end
           end
+          
         end
+      end
+      if updateCount >= 2 then
+        print("total of "..updateCount.." processed")
+      end
+      if updateCount <= 1 then 
+        ngx.sleep(1)
       end
     end
 end

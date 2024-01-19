@@ -46,6 +46,7 @@ function say.error(text)
 end
 
 function say.delete( m, t, mk )
+    local old = g_sayMode
     g_sayMode = mk 
     local ms = say(m)    
     scheduleEvent( t or 120, function(ms)
@@ -53,7 +54,7 @@ function say.delete( m, t, mk )
             bot.deleteMessage(ms.result.chat.id,ms.result.message_id)
         end
     end, ms)
-    g_sayMode = nil
+    g_sayMode = old
 end
 
 function say.admin(text, format, disable_web_page_preview, disable_notification, reply_to_message_id, reply_markup)
@@ -65,23 +66,26 @@ end
 
 
 function say.common( ... )
+    local old = g_sayMode
     g_sayMode = ""
     local r = say(...)
-    g_sayMode = nil 
+    g_sayMode = old 
     return r
 end
 
 function say.html( ... )
+    local old = g_sayMode
     g_sayMode = "HTML"
     local r = say(...)
-    g_sayMode = nil 
+    g_sayMode = old 
     return r
 end
 
 function say.markdown( ... )
+    local old = g_sayMode
     g_sayMode = "Markdown"
     local r = say(...)
-    g_sayMode = nil 
+    g_sayMode = old 
     return r
 end
 
@@ -134,7 +138,7 @@ function say.big_mono(msg, ...)
     end
 end
 
-function say.fancy(str)
+function say.fancy(str, mode)
      local dur = math.random(1,8)
     if str:len() < 10 then 
         dur =  math.min(dur, 3)
@@ -147,10 +151,13 @@ function say.fancy(str)
     elseif str:len() < 50 then 
         dur =  math.min(dur, 7)
     end
-    scheduleEvent(dur, function(a)
+    scheduleEvent(dur, function(a, mode)
+        local old = g_sayMode
+        g_sayMode = mode
         g_chatid = a
         say(str)
-    end, g_chatid)  
+        g_sayMode = old
+    end, g_chatid, mode)  
     bot.sendChatAction(g_chatid, "typing")
 end
 

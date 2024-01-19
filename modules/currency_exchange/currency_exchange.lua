@@ -32,13 +32,11 @@ end
 
 
 function module.getCoinage()
-   
-    local dat = httpsRequest("https://www.bcb.gov.br/api/servico/sitebcb/indicadorCambio")
-    if not dat then 
-        return nil
-    end
+   	local f = io.popen("curl https://www.bcb.gov.br/api/servico/sitebcb/indicadorCambio")
+   	local content = f:read("*a")
+   	f:close()
 
-    local jj = cjson.decode(dat)
+    local jj = cjson.decode(content)
     return jj     
 end
 

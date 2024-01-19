@@ -35,7 +35,8 @@ function OnCommand(user, msg, args)
     keyb2[2] = {}
     keyb2[1][1] = {text = tr("Sair do chat"), callback_data = "lve:"..cid }
     keyb2[2][1] = {text = tr("Ban chat"), callback_data = "bnch:"..cid }
-    local kb3 = cjson.encode({inline_keyboard = keyb2 })
+    local JSON = require("JSON")
+    local kb3 = JSON:encode({inline_keyboard = keyb2 })
 
     bot.sendMessage(81891406, "chat: "..chats[cid].title:htmlFix().."\n"..cid, "HTML", true, false, nil, kb3)
     

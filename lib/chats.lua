@@ -23,19 +23,17 @@ function formatChatMessage(msg)
 
     chatObj.data.message_count = (chatObj.data.message_count or 0)+1
 
-    checkChatStats(chatObj)
+    --checkChatStats(chatObj)
 
     if not prev or prev+3600 < os.time() then 
         SaveChat(msg.chat.id)
     end
-
-    checkCacheChatAdmins(msg)
 end
 
 function checkChatStats(chatObj)
     if not chatObj.data.member_count or  (chatObj.data.auto_update or 0) <= os.time() then
         local cc = bot.getChatMembersCount(chatObj.id)
-        if cc.ok then 
+        if cc and cc.ok then 
             chatObj.data.member_count = cc.result
         else 
             chatObj.data.member_count = 1
@@ -149,6 +147,8 @@ function CheckChat(msg)
             else 
                 isNewChat = true
             end
+
+            pcall(updateCommandListInChat,newChat.id)
 
             SaveChat(id)
         end

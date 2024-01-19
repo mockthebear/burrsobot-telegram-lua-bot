@@ -45,6 +45,12 @@ function OnCommand(msg, text, args, targetChat, vaarg)
             return
         end
 
+        if year < 100 then 
+            year = 2000+year
+        end
+
+        print(day, month, year)
+
         local ts = os.time({day=day,month=month,year=year,hour=hour,min=min,sec=0})
 
         local diff = ts-os.time()

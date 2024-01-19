@@ -11,6 +11,7 @@ function OnCommand(msg, text, attrs, targetChat)
 
 	    local kb = cjson.encode({inline_keyboard = keyb})
 	    pubsub.storePhoto(msg.chat.id)
-	    bot.sendMessage(msg.chat.id, tr("Click to open chat panel (Admin only)"), "", true, false, msg.message_id, kb)
+
+	   bot.sendMessage(msg.chat.id, tr("Click to open chat panel (Admin only)"), "", true, false, msg.message_id, kb)
 	end
 end

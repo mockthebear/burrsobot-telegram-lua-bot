@@ -10,8 +10,9 @@ function getTargetUser(msg, needTarget, global)
         tgtStr = tgtStr:gsub("@",""):lower()
         local usr = getUserByUsername(tgtStr)
         if not usr or not (usr.telegramid or usr.id) then 
-            if tonumber(tgtStr) and users[tonumber(tgtStr)] and users[tonumber(tgtStr)].id then 
-                usr = users[tonumber(tgtStr)]
+            local userId = tonumber(tgtStr)
+            if userId then
+                usr = getUserById(userId) 
             end
         end
         if not usr then 
@@ -49,7 +50,7 @@ function loadUser(id)
     if dataRes and dataRes ~= ngx.null then
         local miniUser = {}
         local userData = table.arraytohash(dataRes) 
-        print("Loading user: "..id)
+        --print("Loading user: "..id)
         for i,b in pairs(userData) do 
             if i ~= "_tmp" and i ~= "_type" then
                 miniUser[i] = unformatFromJson(b) 
@@ -230,6 +231,10 @@ function SaveUser(id)
         id = tonumber(id)
     end
 
+    if not users[id] then
+        getUser(id)
+    end
+
     if users[id] then 
         uname = users[id].username or uname
 
@@ -237,7 +242,7 @@ function SaveUser(id)
             if type(id) == "number" then
                 users[id].telegramid = id
             else
-                say.admin("Error saving unknow1 "..id..":"..debug.traceback())
+                --say.admin("Error saving unknow1 "..id..":"..debug.traceback())
             end
         end
 

@@ -50,7 +50,7 @@ function core.loadCommands()
 	addCommand( "logger"						, MODE_CHATADMS, getModulePath().."/chat/logger.lua", 2, "core-logger-desc" )
 
 	addCommand( "commands"					, MODE_FREE, getModulePath().."/list-commands.lua", 1 ,"core-commands-desc" )
-	--addCommand( "donate"					, MODE_FREE, getModulePath().."/donate.lua",0 , "core-donate-desc")
+	addCommand( "donate"					, MODE_FREE, getModulePath().."/donate.lua",0 , "core-donate-desc")
 	addCommand( "stats"						, MODE_FREE, getModulePath().."/stats.lua", 2 , "core-stats-desc")
 	addCommand( {"ajuda", "help", "faq"}	, MODE_FREE, getModulePath().."/help.lua", 2 , "core-help-desc")	
 	addCommand( "lang"						, MODE_FREE,  getModulePath().."/lang.lua", 2, "core-lang-desc" )
@@ -427,9 +427,9 @@ Para alterar quaisquer configs minhas ou do chat você pode faze-lo por comandos
 •  Default language set to %s 🇧🇷 use /lang to change
 
 
-Support: https://t.me/P7OiXemr_Ts5YTBh
+Support: @burrbotsupport
 
-🐻 Burrbot V4.0 by @Mockthewah~
+🐻 Burrbot V4.0 by @Mockthebear~
 ]]
 	
 

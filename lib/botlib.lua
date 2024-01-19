@@ -1,4 +1,3 @@
-local JSON = require("JSON")
 MODE_FREE     = 0
 MODE_ONLY_ADM = 1
 MODE_NSFW     = 2
@@ -344,6 +343,9 @@ end
 function Dump(T, l, str, supress)
     local ret = ""
     l = l or 1
+    if type(l) ~= number then
+        l = 1
+    end
     supress = supress or {["_tmp"]=false}
     if not T then 
         return tostring(T)

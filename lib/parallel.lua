@@ -4,7 +4,13 @@
 
 
 
+function deploy_setMessageReaction(chat_id, message_id, reaction, is_big)
 
+    ngx.timer.at(0,function(_, chat_id, message_id, reaction, is_big)  
+        g_newhttpc = true; 
+        bot.setMessageReaction(chat_id, message_id, reaction, is_big)
+    end, chat_id, message_id, reaction, is_big)
+end
 
 function deploy_answerCallbackQuery(chat, text, alert)
 

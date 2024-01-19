@@ -1,13 +1,14 @@
 local welcome = {
 	priority = DEFAULT_PRIORITY + 10000,
 }
-local JSON = require("JSON")
+
 
 --[ONCE] runs when the load is finished
 function welcome.load()
 	if pubsub then
 		pubsub.registerExternalVariable("chat", "welcome", {type="string", lenght=4024}, true, "Welcome message", "Welcoming")
 		pubsub.registerExternalVariable("chat", "disable_welcome", {type="boolean"}, true, "Disable welcome messages", "Welcoming")
+		pubsub.registerExternalVariable("chat", "delete_welcome", {type="boolean"}, true, "Auto delete welcome messages after 2 minutes", "Welcoming")
 	end
 end
 
@@ -98,7 +99,7 @@ function welcome.rulesKeyboard(msg)
 		local keyb = {}
 		keyb[1] = {}
 		keyb[1][1] = { text = tr("welcome-chat-rules"), url = "https://telegram.me/burrsobot?start="..msg.chat.id.."_rules"} 
-		kb = JSON:encode({inline_keyboard = keyb })
+		kb = cjson.encode({inline_keyboard = keyb })
 	end
 	return kb
 end
@@ -129,6 +130,14 @@ function welcome.SendWelcomeAndValidate(msg, kb, append)
 	return true, nil
 end
 
+function welcome.triggerDelete(chatid, msg)
+	if chats[chatid].data.delete_welcome then
+	    scheduleEvent(60 * 2, function()
+	        bot.deleteMessage(chatid, ret.result.message_id)
+	    end)  
+	end
+	return msg
+end
 function welcome.sendWelcomeMessage(msg, kb, append)
 	if not chats[msg.chat.id] then 
 		error("Invalid chat: "..msg.chat.id)
@@ -144,13 +153,13 @@ function welcome.sendWelcomeMessage(msg, kb, append)
 
     if text:match("IIMI:(.-):(.+)") then
         local file, txt =  text:match("IIMI:(.-):(.+)")
-        return bot.sendPhoto(msg.chat.id, file, txt, false, msg.message_id, kb, "HTML")
+        return welcome.triggerDelete(msg.chat.id, bot.sendPhoto(msg.chat.id, file, txt, false, msg.message_id, kb, "HTML"))
     elseif  text:match("IIDI:(.-):(.+)") then 
         local file, txt =  text:match("IIDI:(.-):(.+)")
-        return bot.sendDocument(msg.chat.id, file, txt, false, msg.message_id, kb, "HTML")
+        return welcome.triggerDelete(msg.chat.id, bot.sendDocument(msg.chat.id, file, txt, false, msg.message_id, kb, "HTML"))
     elseif  text:match("STCKR:(.+)") then 
         local stckrId = text:match("STCKR:(.+)")
-        return bot.sendSticker(msg.chat.id, stckrId, false, msg.message_id, kb)
+        return welcome.triggerDelete(msg.chat.id, bot.sendSticker(msg.chat.id, stckrId, false, msg.message_id, kb))
     else
         local ret = bot.sendMessage(msg.chat.id, text, "HTML", true, false, msg.message_id, kb)
         if not ret.result then 
@@ -163,7 +172,7 @@ function welcome.sendWelcomeMessage(msg, kb, append)
 	            end)  
 	        end
 	    else 
-	    	say.admin("ERr on welcome send: "..JSON:encode(ret))
+	    	say.admin("ERr on welcome send: "..cjson.encode(ret))
 	    end
 
         return ret

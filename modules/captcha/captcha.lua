@@ -108,7 +108,7 @@ function captcha.onTextReceive(msg)
 					reply("error generating: "..tostring(stderr))
 				end
 			elseif msg.text:find("^/start") then
-				reply("You are in a captcha now. Cancel or solve please.")
+				reply("Please solve the captcha, or use /cancel")
 			elseif msg.text:find("^/recaptcha") then
 				if not seq.renew then 
 					local str, ok, photo = captcha.sendCaptcha(seq.chatid, nil)
@@ -157,7 +157,7 @@ function captcha.startCaptchaProcedure(chat, userId, text, onSucces, onFail, ign
        		shouldCaptchaIt = not ignoreHuman
        	end
 
-       	shouldCaptchaIt = true
+       	--shouldCaptchaIt = true
 
        	if shouldCaptchaIt then
 
@@ -185,7 +185,7 @@ function captcha.startCaptchaProcedure(chat, userId, text, onSucces, onFail, ign
 	           	return false
 	        end
 	    else 
-	    	say.admin("User "..formatUserHtml(users[userId]).." released from captcha at : "..(chats[chatid] and tostring(chats[chatid].data.title) or "??").." = "..str.." at module: "..g_moduleNow, "HTML")
+	    	say.admin("User "..formatUserHtml(users[userId]).." released from captcha at : "..(chats[chatid] and tostring(chats[chatid].data.title) or "??").." = "..text.." at module: "..g_moduleNow, "HTML")
 	    	print("Auto human!")
 	    	onSucces(g_msg)
 	    	return true, "human"
@@ -205,15 +205,23 @@ function captcha.closeCaptha(capid)
 		
 	end
 end
-
-
-function captcha.sendCaptcha(chat, text)
-    local str = string.format("%6.6d",math.random(0,999999)) 
+function captcha.generateCode()
+	local str = string.format("%6.6d",math.random(0,999999)) 
     str = str:gsub("7", "1")                
     str = str:gsub("6", "8")
-    text = text or "-"
-    --Choose a random file
-    local file = assert(io.popen("ls modules/captcha/media/") )
+    return str
+end
+
+function captcha.makeFastCaptcha()
+	local file = assert(io.popen("./modules/captcha/capado") )
+	local s = file:read("*all")
+	file:close()
+	local content = cjson.decode(s)
+	return content.path, content.secret
+end
+
+function captcha.generateImage(number)
+	local file = assert(io.popen("ls modules/captcha/media/") )
     local s = file:read("*all")
     local parsed = {}
     for file in s:gmatch("(.-)\n") do 
@@ -249,12 +257,30 @@ function captcha.sendCaptcha(chat, text)
         say.admin("failed 4"..str.."-"..selectedFile)
         return str, false, {ok=false}
     end
-    local photoMessage = bot.sendPhoto(chat, "../cache/cap2.png", text..(captcha.hasTTS and tr("captcha-can-tts") or ""), "HTML")
+
+    return "../cache/cap2.png"
+end
+
+function captcha.sendCaptcha(chat, text, onlyText, reply_to_message_id, reply_markup)
+	print("Sending media")
+	bot.sendChatAction(chat, "upload_photo")
+    --[[local str = captcha.generateCode()
+
+    local imgpath = captcha.generateImage(str)]]
+
+    local imgpath, secret = captcha.makeFastCaptcha()
+    text = text or "-"
+
+    if not onlyText then 
+    	text = text..(captcha.hasTTS and tr("captcha-can-tts") or "")
+    end
+
+    local photoMessage = bot.sendPhoto(chat, imgpath, text, false, reply_to_message_id, reply_markup, "HTML")
     if not photoMessage then 
-    	say.admin("oh no = "..tostring(chat))
     	return str, false, {ok=false}
     end
-    return str, photoMessage.ok, photoMessage
+    print("Sent")
+    return secret, photoMessage.ok, photoMessage
 end
 
 return captcha

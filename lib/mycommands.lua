@@ -127,6 +127,9 @@ function SetupMyCommands()
 	end
 end
 
+
+
+
 function wipeCommandas(chatid, userid)
 	local valid = {"chat_member", "chat", "chat_administrators",  "all_chat_administrators", "all_group_chats", "all_private_chats", "default"}
 	for _, mode in pairs(valid) do 
@@ -216,12 +219,15 @@ function setCommandsToContext(commands, context, wordIndex, chatid, userid, lang
 		if not desc or desc == "" then 
 			desc = word
 		end
-		if desc:len() >= 256 then
-			desc = desc:sub(1,255)
+		if word:match("^([a-z0-8_]+)$") then
+			if desc:len() >= 256 then
+				desc = desc:sub(1,255)
+			end
+			commandList[#commandList+1] = {command=word, description=desc}
 		end
-		commandList[#commandList+1] = {command=word, description=desc}
 	end
 
+	print(cjson.encode(commandList))
 	local mode = context
 	local res = bot.setMyCommands(cjson.encode(commandList), cjson.encode({type=mode, chat_id=chatid, user_id=user_id}), languageCode)
 	if res.ok then 

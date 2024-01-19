@@ -92,6 +92,8 @@ function listCommandsContext(msg, groups)
 	groups = {MODE_CHATADMS, MODE_ONLY_ADM, MODE_FREE, MODE_NSFW, MODE_CHATONLY, msg.chat.id}
 	local cmd = {}
 
+	checkCacheChatAdmins(msg)
+
 	local isChatAdmin = isEntityChatAdmin(msg)
 	local isBotAdmin = isUserBotAdmin(msg.from.id)
 	
@@ -281,7 +283,7 @@ function findCommand(msg)
         local isBotAdmin = which == "user" and isUserBotAdmin(entity.id)
        
         local chatAdminCheck = targetChat == msg.chat.id and msg.chat.id or targetChat
-        local isChatAdm = isEntityChatAdmin(msg, chatAdminCheck)
+        local isChatAdm = nil
 
         for index ,b in pairs(g_commands) do 
             local usedWord = ""
@@ -324,7 +326,10 @@ function findCommand(msg)
                         if not msg.isChat and not (targetChat ~= msg.chat.id and chats[targetChat]) then
                             reply.delete(tr("default-command-chatonly"), 15, "HTML" )
                             canRun = false
-                        elseif not isChatAdm then                    
+                        end
+                        checkCacheChatAdmins(msg)
+                        isChatAdm = isEntityChatAdmin(msg, chatAdminCheck)
+                        if not isChatAdm then                    
                             local chatid = targetChat ~= msg.chat.id and targetChat or msg.chat.id 
                             if not chats[chatid]._tmp.warndc or chats[chatid]._tmp.warndc <= os.time() then 
                                 chats[chatid]._tmp.warndc = os.time()+120
@@ -361,8 +366,12 @@ function findCommand(msg)
                     
 	            if canRun then 
 	                local isCooldown, cooldownLeft, commandCooldown, location = isCommandOnCooldown(msg, b, isChatAdm)
+	                if isCooldown and isChatAdm == nil then
+	                	isChatAdm = isEntityChatAdmin(msg, chatAdminCheck)
+	                	isCooldown, cooldownLeft, commandCooldown, location = isCommandOnCooldown(msg, b, isChatAdm)
+	                end
 	                if  isCooldown and not isBotAdmin then 
-	                  	if not b.rcold then 
+	                  	if not b.rcold or (msg.chat and chats[msg.chat.id] and chats[msg.chat.id].data.always_send_cooldown_message) then 
 	                        reply.delete(tr("default-command-cooldown" ,tr(location), commandCooldown, cooldownLeft  ),15, "HTML")
 	                        b.rcold = true
 	                    else 
