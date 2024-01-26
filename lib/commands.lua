@@ -331,10 +331,14 @@ function findCommand(msg)
                         isChatAdm = isEntityChatAdmin(msg, chatAdminCheck)
                         if not isChatAdm then                    
                             local chatid = targetChat ~= msg.chat.id and targetChat or msg.chat.id 
-                            if not chats[chatid]._tmp.warndc or chats[chatid]._tmp.warndc <= os.time() then 
-                                chats[chatid]._tmp.warndc = os.time()+120
-                                reply.delete(tr("default-command-chatdmin"), 15, "HTML" )
-                            end
+                            if chats[chatid] then
+	                            if not chats[chatid]._tmp.warndc or chats[chatid]._tmp.warndc <= os.time() then 
+	                                chats[chatid]._tmp.warndc = os.time()+120
+	                                reply.delete(tr("default-command-chatdmin"), 15, "HTML" )
+	                            end
+	                        else 
+	                        	reply.delete(tr("default-command-chatonly"), 15, "HTML" )
+	                        end
                             canRun = false
                         end
                     end

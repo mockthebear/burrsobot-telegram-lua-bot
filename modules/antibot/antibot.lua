@@ -1,18 +1,24 @@
+
 local antibot = {
 	priority = DEFAULT_PRIORITY - 1000100,
 	channel = "@burrbanbot"
 }
-local JSON = require("JSON")
+
+
 --[ONCE] runs when the load is finished
 function antibot.load()
 	if pubsub then
-		pubsub.registerExternalVariable("chat", "botProtection", {type="boolean"}, true, "Bot protection", "Anti-bot")
+		pubsub.registerExternalVariable("chat", "botProtection", {type="boolean"}, true, "Enable anti-bot protection (captcha)", "Anti-bot")
+		pubsub.registerExternalVariable("chat", "botPublic", {type="boolean"}, true, "Bot will send the captcha in the group instead of private. The user will be able to send messages but if he dont do the captcha he'll be kicked", "Anti-bot")
 		pubsub.registerExternalVariable("chat", "botEnforced", {type="boolean"}, true, "Enforce bot protection (force the check on any users)", "Anti-bot")
-		pubsub.registerExternalVariable("chat", "ignoreInviteLink", {type="boolean"}, true, "Captcha ignoring invite link", "Anti-bot")
-		pubsub.registerExternalVariable("chat", "no_nudes", {type="boolean"}, true, "Lock user for 5 minuts to start posting photos", "Anti-bot")
-		pubsub.registerExternalVariable("chat", "easyBot", {type="boolean"}, true, "Easy check (single click). This is unsafe", "Anti-bot")
-		pubsub.registerExternalVariable("chat", "purge_message", {type="boolean"}, true, "Purge join messages on ban", "Anti-bot")
+		pubsub.registerExternalVariable("chat", "ignoreInviteLink", {type="boolean"}, true, "Make bot protection ignore users who joined via a invite link", "Anti-bot")
+		pubsub.registerExternalVariable("chat", "no_nudes", {type="boolean"}, true, "Restrict user from posting media for 5 minutes on join.", "Anti-bot")
+		pubsub.registerExternalVariable("chat", "easyBot", {type="boolean"}, true, "Easy check (single click). This is unsafe.", "Anti-bot")
+		pubsub.registerExternalVariable("chat", "purge_message", {type="boolean"}, true, "Automatically delete telegram default message of 'user joined chat'", "Anti-bot")
 		pubsub.registerExternalVariable("chat", "antibot_duration", {type="number", default=120}, true, "Captcha duration", "Anti-bot")
+		pubsub.registerExternalVariable("chat", "antibot_ban_duration", {type="number", default=3600 * 24}, true, "Ban duration in seconds (default is 24h or 86400 seconds)", "Anti-bot")
+		pubsub.registerExternalVariable("chat", "kick_say", {type="boolean"}, true, "Kick if the person joins and says nothing for 2 minutes", "Anti-bot")
+		pubsub.registerExternalVariable("chat", "auto_kick", {type="boolean"}, true, "Enable autokick for users without profile picute or name equal '.'", "Anti-bot")
 	end
 	if core then  
 		core.addStartOption("Anti bot protection", "OwO", "nobot", function() return tr("antibot-start-desc") end )
@@ -67,8 +73,32 @@ function antibot.onTextReceive( msg )
 	if msg.isChat and chats[msg.chat.id].data.botProtection then
 
 		if chats[msg.chat.id]._tmp.checking[msg.from.id] then
-			deploy_deleteMessage(msg.chat.id, msg.message_id)	
-			return
+			if chats[msg.chat.id].data.botPublic then 
+				users[msg.from.id]._tmp.bot_attempts = (users[msg.from.id]._tmp.bot_attempts or 0) +1
+				if chats[msg.chat.id]._tmp.checking[msg.from.id] == msg.text:lower() then 
+					antibot.releaseBot({id=msg.chat.id, title="?"}, msg.from)
+					deploy_deleteMessage(msg.chat.id, msg.message_id)
+				else 
+					if users[msg.from.id]._tmp.bot_attempts > 5 then 
+						if users[msg.from.id].bot_procedure_check then
+							triggerEvent(users[msg.from.id].bot_procedure_check)
+						end
+						deploy_deleteMessage(msg.chat.id, msg.message_id)
+					else
+						reply.delete(tr('antibot-wrong-combination', formatUserHtml(msg.from), users[msg.from.id]._tmp.bot_attempts), 16, "HTML")
+						deploy_deleteMessage(msg.chat.id, msg.message_id)
+					end
+				end
+			else 
+				deploy_deleteMessage(msg.chat.id, msg.message_id)	
+			end
+			if noraid then 
+				local res = noraid.onTextReceive( msg )
+				if res == KILL_EXECUTION then 
+					return KILL_EXECUTION
+				end
+			end
+			return KILL_EXECUTION
 		end
 
 		if chats[msg.chat.id]._tmp.newUser[msg.from.id] then
@@ -83,6 +113,12 @@ function antibot.onTextReceive( msg )
 		end
 
 
+		if not chats[msg.chat.id]._tmp.say_enter then 
+        	chats[msg.chat.id]._tmp.say_enter = {}
+        end
+
+		chats[msg.chat.id]._tmp.say_enter[msg.from.id] = (chats[msg.chat.id]._tmp.say_enter[msg.from.id] or 2) +1
+ 
 		if chats[msg.chat.id].data.no_nudes then  
 			local opUser, which = getEntity(msg)
 			if which ~= "chat" and opUser then
@@ -136,10 +172,11 @@ function antibot.onCallbackQueryReceive(msg)
 			local chat, id = msg.data:match("admbn:([%-%d]+):(%d+)")
 			chat = tonumber(chat)
 			id = tonumber(id)
+			checkCacheChatAdminsById(chat)
 			if isUserChatAdmin(chat, msg.from.id) or isUserBotAdmin(msg.from.id)  then
 				for iid,b in pairs(chats[chat]._tmp.checking) do 
 					if tonumber(iid) == id then 
-						if  users[id].bot_procedure_check then
+						if users[id].bot_procedure_check then
 							triggerEvent(users[id].bot_procedure_check)
 							users[id].bot_procedure_check = nil
 
@@ -164,6 +201,7 @@ function antibot.onCallbackQueryReceive(msg)
 			chat = tonumber(chat)
 			id = tonumber(id)
 			if chats[chat] then
+				checkCacheChatAdminsById(chat)
 				if isUserChatAdmin(chat, msg.from.id) or isUserBotAdmin(msg.from.id)  then
 					local mem = bot.getChatMember(chat, id)
 					if mem and mem.ok then
@@ -284,8 +322,6 @@ function antibot.onNewChatParticipant(msg)
 
 	if users[msg.new_chat_participant.id] then
 
-
-			
 		if (chats[msg.chat.id].data.botProtection) then
 
 			local shouldCheck = true
@@ -296,38 +332,83 @@ function antibot.onNewChatParticipant(msg)
 			end
 
 			if shouldCheck then
-				--print('fromLink = ',fromLink)
-				if not fromLink and ((chats[msg.chat.id].data.botProtection and users[msg.new_chat_participant.id] and (users[msg.new_chat_participant.id].unsafe or (users[msg.new_chat_participant.id].bot_banned and  tonumber(users[msg.new_chat_participant.id].bot_banned) or os.time()+9999)  < os.time()) ) or chats[msg.chat.id].data.botEnforced ) then 
-					bot.restrictChatMember(msg.chat.id, msg.new_chat_participant.id, -1, false, false, false, false)
-					local hasUname = msg.new_chat_participant.username2 == msg.new_chat_participant.username
-					local lname = originalUname and ("@"..msg.new_chat_participant.username) or msg.new_chat_participant.first_name
-		
+
+				if not fromLink 
+					and (
+							(
+								chats[msg.chat.id].data.botProtection 
+								and users[msg.new_chat_participant.id] 
+								and (
+									users[msg.new_chat_participant.id].unsafe 
+									or (
+										users[msg.new_chat_participant.id].bot_banned 
+										and  tonumber(users[msg.new_chat_participant.id].bot_banned
+										) 
+									or os.time()+9999
+								)  < os.time()
+							)
+						) 
+						or chats[msg.chat.id].data.botEnforced 
+					) then
+
 					local reason = nil
 					if chats[msg.chat.id].data.botEnforced then 
 						reason = tr("antibot-reason")
 					else 
 						reason = users[msg.new_chat_participant.id].unsafe
 					end
-					local msger,ttt = antibot.formatKickMessage(msg.chat.id,msg.new_chat_participant.id, msg.new_chat_participant.first_name, msg.new_chat_participant.originalUname, reason, g_msg.message_id)
+					local msger
+
+					local autoKick = false 
+
+					if chats[msg.chat.id].data.auto_kick then
+						if msg.new_chat_participant.first_name == "." then 
+							autoKick = true
+						end
+						local res = bot.getUserProfilePhotos(msg.new_chat_participant.id, 0, 1)
+						if res.result and res.result.total_count == 0 then 
+							autoKick = true
+						end
+					end
+
+					if autoKick then 
+
+
+						antibot.doKickUser( {
+							id = msg.new_chat_participant.id, 
+							chat = msg.chat, 
+							username = msg.new_chat_participant.username, 
+							from = msg.new_chat_participant,
+							name=msg.new_chat_participant.first_name:htmlFix(), 
+							mid=msg.message_id 
+						}, ('Auto banned '..formatUserHtml(msg)..' on antibot.'))
+						return KILL_EXECUTION
+					end
+
+					if chats[msg.chat.id].data.botPublic then 
+						bot.restrictChatMember(msg.chat.id, msg.new_chat_participant.id, -1, false, false, false, true)
+						
+					else
+						bot.restrictChatMember(msg.chat.id, msg.new_chat_participant.id, -1, false, false, false, false)						
+					end
+
+					local msger = antibot.formatKickMessage(msg.chat.id,msg.new_chat_participant.id, msg.new_chat_participant.first_name, msg.new_chat_participant.originalUname, reason, g_msg.message_id)
+
 					if not msger.result then 
 						say.admin(Dump(msger))
+						return
 					end
 						
-					chats[msg.chat.id]._tmp.checking[msg.new_chat_participant.id] = true
-					
 					local eventId = scheduleEvent(chats[msg.chat.id].data.antibot_duration or 120, antibot.botUserCheck, msg, msger.result.message_id) 
 					users[msg.new_chat_participant.id].todelete = msger.result.message_id
 					users[msg.new_chat_participant.id].todelete_join = msg.message_id
 					users[msg.new_chat_participant.id].bot_procedure_check = eventId
-					print("Proc: "..eventId)
-					
 
 					scheduleEvent(110, antibot.checkBotStillInChat, {event=eventId,id = msg.new_chat_participant.id, chat = msg.chat.id, username = msg.new_chat_participant.username, msg = msger.result.message_id, name=msg.new_chat_participant.first_name:htmlFix(), mid=msg.message_id } )
 
+
 					SaveUser(msg.new_chat_participant.id)
-
 					restricted = true
-
 				end
 			end
 
@@ -357,53 +438,80 @@ end
 
 
 
-function antibot.formatKickMessage(chat,userId, userName, uname, reason, msgid)
+function antibot.formatKickMessage(chat, userId, userName, uname, reason, msgid)
 
     g_lang = chats[chat].data.lang
 
-    local keyb = {}
-    keyb[1] = {}
-    keyb[2] = {}
-    keyb[3] = {}
+    if chats[chat].data.botPublic then 
 
-    if chats[chat].data.easyBot then
-        keyb[1][1] = { text = tr("antibot-notabot"), callback_data = "nbae:"..chat} 
+    	local keyb_recaptchakb = {}
+	    keyb_recaptchakb[1] = {}
+	    keyb_recaptchakb[2] = {}
+
+	    keyb_recaptchakb[1][1] = { text = tr("antibot-approve"), callback_data = "admrls:"..chat..":"..userId} --   url = "https://telegram.me/burrsobot?start="..chat.."_releasebot_"..(users[userId] and users[userId].telegramid or userId) 
+	    keyb_recaptchakb[2][1] = { text = tr("antibot-notapprove"), callback_data = "admbn:"..chat..":"..userId} --   url = "https://telegram.me/burrsobot?start="..chat.."_releasebot_"..(users[userId] and users[userId].telegramid or userId) 
+	    
+
+    	local text = tr("antibot-public", formatUserHtml({from={id=userId, first_name=(userName):htmlFix()}}))
+
+    	local recaptchakb = cjson.encode({inline_keyboard = keyb_recaptchakb })
+
+    	local secret, __, msg  = captcha.sendCaptcha(chat, text, true, nil, recaptchakb)
+
+    	users[userId]._tmp.bot_attempts = 0
+
+    	chats[chat]._tmp.checking[userId] = secret
+
+    	return msg, text
     else
-        keyb[1][1] = { text = tr("antibot-notabot"), url = "https://telegram.me/burrsobot?start="..chat.."_notabot"} 
-    end
+
+    	chats[chat]._tmp.checking[userId] = true
+
+	    local keyb = {}
+	    keyb[1] = {}
+	    keyb[2] = {}
+	    keyb[3] = {}
+
+	    if chats[chat].data.easyBot then
+	        keyb[1][1] = { text = tr("antibot-notabot"), callback_data = "nbae:"..chat} 
+	    else
+	        keyb[1][1] = { text = tr("antibot-notabot"), url = "https://telegram.me/burrsobot?start="..chat.."_notabot"} 
+	    end
 
 
-    local kb = JSON:encode({inline_keyboard = keyb })
-    local isSent = false
-    if users[userId] then 
-        local keyb2 = {}
-        keyb2[1] = {}
-        keyb2[1][1] = { text = tr("antibot-notabot"), callback_data = "nbcp:"..chat}
-        local kb2 = JSON:encode({inline_keyboard = keyb2 })
-        local rer = bot.sendMessage(users[userId].telegramid, tr("antibot-pvt-message", (chats[chat].title or "this chat"):htmlFix() )..(chats[chat].data.easyBot and " \nOnce you pressed, the text box will show `start` press it again!" or ""), "HTML", true, false, nil, kb2)
-        if rer and rer.ok then 
-            isSent = true
-        end
+	    local kb = cjson.encode({inline_keyboard = keyb })
+	    local isSent = false
+	    if users[userId] then 
+	        local keyb2 = {}
+	        keyb2[1] = {}
+	        keyb2[1][1] = { text = tr("antibot-notabot"), callback_data = "nbcp:"..chat}
+	        local kb2 = cjson.encode({inline_keyboard = keyb2 })
+	        local rer = bot.sendMessage(users[userId].telegramid, tr("antibot-pvt-message", (chats[chat].title or "this chat"):htmlFix() )..(chats[chat].data.easyBot and " \nOnce you pressed, the text box will show `start` press it again!" or ""), "HTML", true, false, nil, kb2)
+	        if rer and rer.ok then 
+	            isSent = true
+	        end
 
-    end
-    --if users[userId] then
-        keyb[2][1] = { text = tr("antibot-approve"), callback_data = "admrls:"..chat..":"..userId} --   url = "https://telegram.me/burrsobot?start="..chat.."_releasebot_"..(users[userId] and users[userId].telegramid or userId) 
-        keyb[3][1] = { text = tr("antibot-notapprove"), callback_data = "admbn:"..chat..":"..userId} --   url = "https://telegram.me/burrsobot?start="..chat.."_releasebot_"..(users[userId] and users[userId].telegramid or userId) 
-    --end
-    local kb = JSON:encode({inline_keyboard = keyb })
-    
-    local msg = nil 
-    local text = tr('antibot-enter-message', formatUserHtml({from={id=userId, name=(userName):htmlFix(), username = uname}}), ( reason or "auto check"):htmlFix() )
-    if isSent then
-        text = text .. tr("antibot-pvt-notify")
-    end
+	    end
+	    --if users[userId] then
+	        keyb[2][1] = { text = tr("antibot-approve"), callback_data = "admrls:"..chat..":"..userId} --   url = "https://telegram.me/burrsobot?start="..chat.."_releasebot_"..(users[userId] and users[userId].telegramid or userId) 
+	        keyb[3][1] = { text = tr("antibot-notapprove"), callback_data = "admbn:"..chat..":"..userId} --   url = "https://telegram.me/burrsobot?start="..chat.."_releasebot_"..(users[userId] and users[userId].telegramid or userId) 
+	    --end
+	    local kb = cjson.encode({inline_keyboard = keyb })
+	    
+	    local msg = nil 
+	    local text = tr('antibot-enter-message', formatUserHtml({from={id=userId, first_name=(userName):htmlFix(), username = uname}}), ( reason or "auto check"):htmlFix() )
+	    if isSent then
+	        text = text .. tr("antibot-pvt-notify")
+	    end
 
-    msg = bot.sendDocument(chat, "CgADBAAD-AADuxgkUjxM9Uzdf7FDFgQ", text, false, msgid or false , kb, "HTML")
-    if msg and not msg.ok then 
-    	msg = bot.sendMessage(chat, text, "HTML", false, false, msgid or false , kb)
- 	end
+	    msg = bot.sendDocument(chat, "CgADBAAD-AADuxgkUjxM9Uzdf7FDFgQ", text, false, msgid or false , kb, "HTML")
+	    if msg and not msg.ok then 
+	    	msg = bot.sendMessage(chat, text, "HTML", false, false, msgid or false , kb)
+	 	end
+	 	return msg,text
+	end
        
-    return msg,text
+    
 end
 
 
@@ -415,6 +523,33 @@ function antibot.checkUserIsInChat(msg)
             if data.ok == false or data.ok == "false" or data.result.status == "left" then 
                 bot.sendMessage(msg.chat.id,"User "..formatUserHtml(msg).." left the chat. Sad.", "HTML")
                 users[msg.from.id].left = true
+            end
+        end
+    end
+end
+
+function antibot.checkUserSay(msg)
+    local usr = msg.from 
+    if users[usr.id] then
+        local data = bot.getChatMember(msg.chat.id, usr.id)
+        if data then 
+            if data.ok and data.result.status == "member" then 
+                if not chats[msg.chat.id]._tmp.say_enter then 
+                	chats[msg.chat.id]._tmp.say_enter = {}
+                end
+                if chats[msg.chat.id]._tmp.say_enter[msg.from.id] and chats[msg.chat.id]._tmp.say_enter[msg.from.id] > 1 then 
+                	return
+                end
+                g_lang = chats[msg.chat.id].data.lang
+
+                if not chats[msg.chat.id]._tmp.say_enter[msg.from.id] then
+                	bot.sendMessage(msg.chat.id,tr("antibot-said-nothing-warn", formatUserHtml(msg)), "HTML")
+                	chats[msg.chat.id]._tmp.say_enter[msg.from.id] = 1
+                else 
+                	chats[msg.chat.id]._tmp.say_enter[msg.from.id] = nil
+                	bot.kickChatMember(msg.chat.id, msg.from.id , os.time()+60)
+                	bot.sendMessage(msg.chat.id, "Kicked "..formatUserHtml(msg), "HTML")
+                end
             end
         end
     end
@@ -437,7 +572,7 @@ function antibot.releaseBot(chat, user, callbackId)  --, id, fname, cb
 
 
     local aux = ""
-    local JSON = require("JSON")
+
     if chats[chat.id]._tmp.checking[user.id] then 
 
          
@@ -467,6 +602,11 @@ function antibot.releaseBot(chat, user, callbackId)  --, id, fname, cb
 		scheduleEvent(60, antibot.checkUserIsInChat, {chat=chat, from=user}) 
 		scheduleEvent(chats[chat.id].data.antibot_duration or 120, antibot.checkUserIsInChat, {chat=chat, from=user}) 
 
+		if chats[chat.id].data.kick_say then
+			scheduleEvent(60, antibot.checkUserSay, {chat=chat, from=user}) 
+			scheduleEvent(120, antibot.checkUserSay, {chat=chat, from=user}) 
+		end
+
 		welcome.sendWelcomeMessage({chat=chat, from=user})
     end    
 
@@ -490,6 +630,66 @@ function antibot.releaseBot(chat, user, callbackId)  --, id, fname, cb
     end
 end
 
+function antibot.doKickUser(msg, word)
+	g_lang = getUserLang(msg)
+	if type(chats[msg.chat.id]._tmp.checking[msg.from.id]) == "number" then
+	    local capid = chats[msg.chat.id]._tmp.checking[msg.from.id] 
+	    captcha.closeCaptha(capid)
+	end
+
+	local banDuration = chats[msg.chat.id].data.antibot_ban_duration or 3600*24
+
+    local ret = bot.kickChatMember(msg.chat.id, msg.from.id  or users[msg.from.id].telegramid, os.time()+banDuration)
+    if not ret or not ret.ok then 
+        bot.sendMessage(msg.chat.id,"Failed to kick, reason:"..tostring(ret.description))
+        chats[msg.chat.id]._tmp.checking[msg.from.id] = false
+        return
+    end
+
+    local restMsg = nil
+    while not restMsg do 
+        restMsg = bot.sendMessage(msg.chat.id, tr("antibot-ban", formatUserHtml(msg)), "HTML")
+    end
+            
+    g_chatid = msg.chat.id 
+
+    chats[msg.chat.id]._tmp.newUser[msg.from.id] = nil
+    chats[msg.chat.id]._tmp.checking[msg.from.id] = nil
+
+    users[msg.from.id].bot_banned = os.time() + 12 * 3600
+    users[msg.from.id].left = true
+    SaveUser(msg.from.id)
+
+
+    local keyb = {}
+    keyb[1] = {}
+
+            
+    keyb[1][1] = { text = tr("Release (unban)"), callback_data = "rls:"..msg.chat.id..":".. msg.from.id } 
+            
+    local kb = cjson.encode({ inline_keyboard = keyb })
+
+        
+
+    say.admin('Banned '..formatUserHtml(msg)..' for beeing a bot on '..chats[msg.chat.id].title, "HTML", true, true, nil, kb)
+    bot.sendMessage(antibot.channel, word or ('Banned '..formatUserHtml(msg)..' for failing to prove its not a bot.'), "HTML")
+
+    if users[msg.from.id].todelete then
+    	bot.deleteMessage(msg.chat.id, users[msg.from.id].todelete)
+    	users[msg.from.id].todelete = nil
+  	end
+    if chats[msg.chat.id].data.purge_message then 
+	    if users[msg.from.id].todelete_join then
+	    	bot.deleteMessage(msg.chat.id, users[msg.from.id].todelete_join)
+	    end 
+
+	   	scheduleEvent(30, function(sd, chid)
+	    	if sd and sd.result then 
+	    		bot.deleteMessage(chid,sd.result.message_id)
+	    		end
+	   	end, restMsg, msg.chat.id) 
+	end
+end
 
 function antibot.botUserCheck(msg, msg_delete)
 	--Check chat because the bot can leave the chat in between the timer
@@ -498,65 +698,7 @@ function antibot.botUserCheck(msg, msg_delete)
          	bot.deleteMessage(msg.chat.id, msg_delete)
         end
         if chats[msg.chat.id]._tmp.checking[msg.from.id] then 
-            g_lang = getUserLang(msg)
-
-            if type(chats[msg.chat.id]._tmp.checking[msg.from.id]) == "number" then
-	        	local capid = chats[msg.chat.id]._tmp.checking[msg.from.id] 
-	        	captcha.closeCaptha(capid)
-	        end
-
-            local ret = bot.kickChatMember(msg.chat.id, msg.from.id  or users[msg.from.id].telegramid, os.time()+3600*24)
-            if not ret or not ret.ok then 
-                bot.sendMessage(msg.chat.id,"Failed to kick, reason:"..tostring(ret.description))
-                chats[msg.chat.id]._tmp.checking[msg.from.id] = false
-                return
-            end
-
-            local restMsg = nil
-            while not restMsg do 
-                restMsg = bot.sendMessage(msg.chat.id, tr("antibot-ban", formatUserHtml(msg)), "HTML")
-            end
-            
-            g_chatid = msg.chat.id 
-
-            chats[msg.chat.id]._tmp.newUser[msg.from.id] = nil
-            chats[msg.chat.id]._tmp.checking[msg.from.id] = nil
-
-            users[msg.from.id].bot_banned = os.time() + 12 * 3600
-            users[msg.from.id].left = true
-            SaveUser(msg.from.id)
-
-
-            local keyb = {}
-            keyb[1] = {}
-
-            
-            keyb[1][1] = { text = tr("Release (unban)"), callback_data = "rls:"..msg.chat.id..":".. msg.from.id } 
-            
-            local kb = JSON:encode({inline_keyboard = keyb })
-
-        
-
-            say.admin('Banned '..formatUserHtml(msg)..' for beeing a bot on '..chats[msg.chat.id].title, "HTML", true, true, nil, kb)
-            bot.sendMessage(antibot.channel,'Banned '..formatUserHtml(msg)..' for failing to prove its not a bot.', "HTML")
-
-            if users[msg.from.id].todelete then
-            	bot.deleteMessage(msg.chat.id, users[msg.from.id].todelete)
-            	users[msg.from.id].todelete = nil
-        	end
-            if chats[msg.chat.id].data.purge_message then 
-	    		if users[msg.from.id].todelete_join then
-	    			bot.deleteMessage(msg.chat.id, users[msg.from.id].todelete_join)
-	    		end 
-
-	    		scheduleEvent(30, function(sd, chid)
-	    			if sd and sd.result then 
-	    				bot.deleteMessage(chid,sd.result.message_id)
-	    			end
-	    		end, restMsg, msg.chat.id) 
-
-	    	end
-           
+        	antibot.doKickUser(msg, nil)
         else 
             --bot.sendMessage(msg.chat.id,"User confirmed.")
             chats[msg.chat.id]._tmp.newUser[msg.from.id] = nil
@@ -571,7 +713,6 @@ function antibot.forceBotCheck(msg, reason)
     if not chats[msg.chat.id]._tmp.checking[msg.from.id] then
         bot.restrictChatMember(msg.chat.id , msg.from.id, -1, false, false, false, false) 
         local todeleteMessage = antibot.formatKickMessage(msg.chat.id, msg.from.id, msg.from.first_name, msg.from.originalUname, reason, msg.message_id)
-        chats[msg.chat.id]._tmp.checking[msg.from.id] = true
         if not msg.new_chat_participant then 
         	msg.new_chat_participant = msg.from
         end
@@ -589,6 +730,10 @@ function antibot.loadTranslation()
 
 	g_locale[LANG_BR]["antibot-notabot"] = "Não sou um bot"
 	g_locale[LANG_US]["antibot-notabot"] = "Im not a bot"
+
+
+	g_locale[LANG_BR]["antibot-public"] = "Olá %s. Para continuat no chat, preciso que você digite os números acima. Você tem 2 minutos para fazer isso, se não será banido do grupo."
+	g_locale[LANG_US]["antibot-public"] = "Hello %s. To stay in the chat i need you tp type the numbers above. You have two minutes to do, otherwise you will be banned."
 
 
 	g_locale[LANG_BR]["antibot-reason"] = "Regras do chat"
@@ -629,6 +774,10 @@ function antibot.loadTranslation()
 	g_locale[LANG_US]["antibot-first-link"] = "first message contains a link"	
 
 
+	g_locale[LANG_BR]["antibot-wrong-combination"] = "Atenção %s, código inválido. Por favor digite os numeros acima.\nTentativa %d/5\n<b>São um total de 6 digitos! talvez você precise abrir a imagem para ver o resto!</b>"
+	g_locale[LANG_US]["antibot-wrong-combination"] = "Attention %s, invalid captcha. Please type the numbers above.\nTry %d/5\n<b>There are a total of 6 digits! You may need to click on the image to see the others</b>"	
+
+
 	g_locale[LANG_BR]["antibot-nolinks"] = "Usuário %s não tem permissão para enviar links aqui ainda. Eu vou deletar todos os links até a limitação de %s segundos."
 	g_locale[LANG_US]["antibot-nolinks"] = "User %s you dont have the right to send links here yet. Im deleting every link until the limitation of %s seconds."
 
@@ -639,7 +788,9 @@ function antibot.loadTranslation()
 	g_locale[LANG_US]["antibot-desc"] = 'When a new user joins:\n- without profile pic\n- without username\n- on the blocklist\n- his first message contain media or link\nThe bot will lock this user and send him a button. If he dont presses it within 2 minutes he will be kicked.'
 
 
-
+	g_locale[LANG_BR]["antibot-said-nothing-warn"] = "Attention %s, you joined and said nothing. You will be kicked in 1 minute."
+	g_locale[LANG_US]["antibot-said-nothing-warn"] = "Atenção %s, você entrou porem não disse nada ainda. Você será removido do grupo em 1 minuto."
+	
 end
 
 

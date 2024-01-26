@@ -107,7 +107,7 @@ function module.onUpdateChatJoinRequest(msg)
 	    
 	    local kb = cjson.encode({inline_keyboard = keyb })
 
-		checkCacheChatAdmins(msg)
+		checkCacheChatAdminsById(chatid)
 		for userId, _ in pairs(chats[chatid]._tmp.adms) do 
 			userId = tonumber(userId)
 			if userId then

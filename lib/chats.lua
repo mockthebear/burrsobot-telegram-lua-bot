@@ -88,6 +88,14 @@ function checkCacheChatAdmins(msg, chatOverride)
     end
 end
 
+function checkCacheChatAdminsById(id)
+    local chatObj = chats[id]
+    if chatObj and ((chatObj._tmp.adms_cache or 0 ) <= os.time()) then
+        cacheAdministrators({chat={id=id}})
+    end
+    SaveChat(msg.chat.id)
+end
+
 function cacheAdministrators(msgs)
     local chatid = msgs.chat.id
     local basechatInfo = bot.getChat(chatid)
