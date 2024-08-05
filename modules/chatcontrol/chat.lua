@@ -4,19 +4,30 @@ function OnCommand(user, msg, args)
 		return
 	end
 	args[2] = tonumber(args[2]:lower()) or args[2]:lower()
+	local chatsF = {}
 	if not chats[args[2]] then 
 		local found = false
 		for i,b in pairs(chats) do 
 			if (b.name or b.title):lower():find(args[2])  then 
 				args[2] = i 
 				found = true
-				break
+				chatsF[#chatsF+1] = (b.name or b.title) ..' - '..b.id
 			end
 		end
 		if not found then 
 			reply("nothing")
 			return
 		end	
+	end
+
+	if #chatsF > 1 then 
+		local fn = ""
+		for a,c in pairs(chatsF) do 
+			fn = fn .. c .. '\n'
+		end
+
+		say.big(fn)
+		return
 	end
 
 	local cid = args[2]
@@ -37,6 +48,6 @@ function OnCommand(user, msg, args)
     keyb2[2][1] = {text = tr("Ban chat"), callback_data = "bnch:"..cid }
     local kb3 = cjson.encode({inline_keyboard = keyb2 })
 
-    bot.sendMessage(81891406, "chat: "..chats[cid].title:htmlFix().."\n"..cid, "HTML", true, false, nil, kb3)
+    bot.sendMessage(user.chat.id, "chat: "..chats[cid].title:htmlFix().."\n"..cid, "HTML", true, false, nil, kb3)
     
 end 

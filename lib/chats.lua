@@ -93,7 +93,7 @@ function checkCacheChatAdminsById(id)
     if chatObj and ((chatObj._tmp.adms_cache or 0 ) <= os.time()) then
         cacheAdministrators({chat={id=id}})
     end
-    SaveChat(msg.chat.id)
+    SaveChat(id)
 end
 
 function cacheAdministrators(msgs)

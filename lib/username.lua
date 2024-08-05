@@ -20,8 +20,12 @@ function setUsernameKey(entity, forcedType)
 	if not usrType then
 		if not entity._tmp then 
 			say.admin("The missing entity data is: <code>"..cjson.encode(entity).."</code>", "HTML")
+			return  nil
 		end
+		print(entity)
+		print(entity._tmp)
 		usrType = entity._tmp.type
+
 
 	end
 	if not entity.username then 
@@ -84,7 +88,7 @@ function getEntityByUsername(username)
 end
 
 function getUserByUsername(uname)
-	if not uname then 
+	if not uname or uname == "" then 
 		return nil
 	end
 	if uname:sub(1,1) == "@" then 

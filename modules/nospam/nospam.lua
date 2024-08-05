@@ -6,7 +6,7 @@ local nospam = {
 function nospam.load()
     if pubsub then
         pubsub.registerExternalVariable("chat", "nospam", {type="boolean"}, true, "Enable no spam", "Nospam")
-        pubsub.registerExternalVariable("chat", "maxSpamTime", {type="number", default=60}, true, "Max spam time", "Nospam")
+        pubsub.registerExternalVariable("chat", "maxSpamTime", {type="number", default=60}, true, "Max spam time (in seconds.) Its a rate for messages / time to trigger an action", "Nospam")
         pubsub.registerExternalVariable("chat", "maxSpamMessages", {type="number", default=30}, true, "Max spam messages", "Nospam")
         pubsub.registerExternalVariable("chat", "actionSpam", {type="string", valid={"ban", "warn", "lock", "mute"}, default="warn" }, true, "Action spam", "Nospam") 
     end

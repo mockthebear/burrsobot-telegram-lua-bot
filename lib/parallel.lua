@@ -23,7 +23,10 @@ end
 function deploy_deleteMessage(chat, mid)
     ngx.timer.at(0,function(_, chat, mid)  
         g_newhttpc = true; 
-        bot.deleteMessage(chat, mid)
+        local res = bot.deleteMessage(chat, mid)
+        if not res.ok then 
+            bot.deleteMessage(chat, mid)
+        end
     end, chat, mid)
 end
 

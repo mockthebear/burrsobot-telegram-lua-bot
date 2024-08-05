@@ -69,7 +69,7 @@ function OnCommand(user, msg, args)
     	str = "📈*Chat statistics*📉\n\n"..
     	"🔢 Chat id *"..cdata.id.."*\n"..
     	"📑 Chat type *"..cdata.type.."*\n"..
-    	"🚦 Bot protecion is *"..(chats[user.chat.id].botProtection and "enabled" or "disabled").."*\n"..
+    	"🚦 Bot protecion is *"..(chats[user.chat.id].data.botProtection and "enabled" or "disabled").."*\n"..
 
     	"\n"..str
 

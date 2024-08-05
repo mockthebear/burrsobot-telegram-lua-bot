@@ -130,10 +130,10 @@ function makeRequest(method, body_arg, forceHttpConn, disableSchedule)
   local pre = ngx.now()
   local body, boundary = encode(body_arg)
 
-  local connModule = getHttpConnection(false)  
-  io.write("Calling: "..method)
+  local connModule = getHttpConnection(true)  
+  --io.write("Calling: "..method)
   local post = ngx.now() - pre
-  io.write(" precall in "..post)
+  --io.write(" precall in "..post)
 
   local res, err,a,c = connModule:request_uri("https://api.telegram.org/bot"..M.token.."/" .. method, {
       method = "POST",
@@ -148,10 +148,10 @@ function makeRequest(method, body_arg, forceHttpConn, disableSchedule)
   
 
   local post = ngx.now() - pre 
-	io.write(" finished in "..post)
+	--io.write(" finished in "..post)
   connModule:close()
   post = ngx.now() - pre 
-  print(" closed in "..post.." at ")
+  --print(" closed in "..post.." at ")
   M.requests[(M.requestCounter%10) + 1] = post
   M.requestCounter = M.requestCounter + 1
   

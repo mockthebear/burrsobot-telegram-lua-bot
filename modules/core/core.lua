@@ -39,6 +39,7 @@ function core.save()
 end
 
 function core.loadCommands()
+	addCommand( "privacity"						, MODE_FREE, getModulePath().."/chat/privacity.lua", 2, "core-privacity-desc" )
 	addCommand( "disable"						, MODE_CHATADMS, getModulePath().."/chat/disable-command.lua", 2, "core-disable-desc" )
 	addCommand( "enable"						, MODE_CHATADMS, getModulePath().."/chat/enable-command.lua", 2, "core-enable-desc" )
 	addCommand( "disableall"					, MODE_CHATADMS, getModulePath().."/chat/disable-all.lua", 2 , "core-disableall-desc"  )
@@ -219,8 +220,40 @@ function core.loadTranslation()
 	g_locale[LANG_US]["core-sfw-desc-short"] = "SFW mode"
 	g_locale[LANG_BR]["core-sfw-desc-short"] = "Modo sfw"
 	
-	g_locale[LANG_US][""] = ""
-	g_locale[LANG_BR][""] = ""
+	g_locale[LANG_US]["core-privacity"] = [[Information about you:
+
+Burrbot will store the following data: 
+* Basic user information thats avaliable to the bots (userid, name, username, no profile pictures)
+* Command cached data. Command like /today command or /comer, need to know when they need to change the results... Other commands need to store some information, so you can have more information stored related to those commands that need to 'remember' something.   
+* If you join a chat with the bot it will store the date you joined the chat for the antibot feature dont detect something backwards
+* Any command sent to the bot private will be logged for debugging and anti abuse reasons.
+* When using the command /panel, the panel itself is a webpage outside telegram, therefore your IP address might be visible to the hosting provider. 
+* Any text message sent to the bot private MIGHT be visible to the bot owner while debugging. 
+* Banlist information. If you endup in a 'raid ban list' for beeing a pedo/zoo/nazi/raider, a flag will be stored saying you're in the list. 
+
+Information about chats:
+
+* This bot do not log the chat messages UNLESS one administrator use the command '/logger on'. This option comes as default as disabled. 
+* The metrics option store on which date a message appear on the chat, to generate graphs and stuff. It does not store messages.  This option comes as default as disabled. 
+* Any command used with burrbot in a chat will be logged for debugging and anti abuse reasons. 
+* Any chat the bot is added, it will be visible to the bot administrators and can be stored: Name, Id, Description, Profile picture, Member count and administrators. Other than that and commands, nothing else is stored. 
+]]
+	g_locale[LANG_BR]["core-privacity"] = [[O Burrbot armazenará os seguintes dados:
+
+* Informações básicas do usuário disponíveis para os bots (ID do usuário, nome, nome de usuário, sem fotos de perfil).
+* Dados em cache dos comandos. Comandos como /today ou /comer precisam saber quando mudar os resultados... Outros comandos precisam armazenar algumas informações para que você possa ter mais informações relacionadas a esses comandos que precisam "lembrar" de algo.
+* Se você entrar em um chat com o bot, ele armazenará a data de entrada no chat para que o recurso antibot não detecte algo incorretamente.
+* Qualquer comando enviado ao bot em privado será registrado para fins de depuração e prevenção de abuso.
+* Ao usar o comando /panel, o painel em si é uma página da web fora do Telegram, portanto, seu endereço IP pode ser visível para o provedor de hospedagem.
+* Qualquer mensagem de texto enviada ao bot em privado PODE ser visível para o proprietário do bot durante a depuração.
+* Informações da lista de banimentos. Se você acabar em uma "lista de banimento de invasão" por ser pedo/zoo/nazi/raider, será armazenada uma marcação indicando que você está na lista.
+
+Informações sobre chats:
+
+* Este bot não registra as mensagens do chat, A MENOS que um administrador use o comando '/logger on'. Esta opção vem desativada por padrão.
+* A opção de métricas armazena a data em que uma mensagem aparece no chat, para gerar gráficos e outras estatísticas. Não armazena mensagens. Esta opção vem desativada por padrão.
+* Qualquer comando usado com o Burrbot em um chat será registrado para fins de depuração e prevenção de abuso.
+* Qualquer chat ao qual o bot seja adicionado será visível para os administradores do bot e pode ser armazenado: Nome, ID, Descrição, Foto de perfil, Contagem de membros e administradores. Além disso e dos comandos, nada mais é armazenado.]]
 	
 	g_locale[LANG_US][""] = ""
 	g_locale[LANG_BR][""] = ""
@@ -406,21 +439,21 @@ end
 function core.onNewChat(msg)
 
 	local text = [[
-🇺🇸 <b>Thanks for adding me on this chat!</b>
-
-To alter any config mine or about the chat you can do it using commands or trought the panel using <b>/panel</b>
-• <i>Any command i have or feature can be individually disabled</i> if you feel there are too much spam or useless. Commands can be disabled using /disable or /disableall
-• If you are after protection features you can check them trought /painel or /security
-• Now if you are after the utilities you can use /commands to check all commands. If you have any questions you use /help (commands)
-
-<code>---------------------------------------</code>
-
 🇧🇷 <b>Obrigado por me adicionar nesse chat!</b>
 
 Para alterar quaisquer configs minhas ou do chat você pode faze-lo por comandos ou pelo painel usando <b>/painel</b>
 •  <i>Todos os comandos e features que eu tenho podem ser desligadas individualmente</i> se você achar que é muito spam ou desnecessários. Comandos por exemplo podem ser desabilitados usando /disable ou /disableall.
 •  Se estiver procurando proteção, você pode visualizar pelo /painel ou usando /security
 • Agora se o que você quer é as utilidades basta usar /commands que eu mando a lista completa de comandos. E se tiver alguma duvida, basta usar /help (comando)
+
+<code>---------------------------------------</code>
+
+🇺🇸 <b>Thanks for adding me on this chat!</b>
+
+To alter any config mine or about the chat you can do it using commands or trought the panel using <b>/panel</b>
+• <i>Any command i have or feature can be individually disabled</i> if you feel there are too much spam or useless. Commands can be disabled using /disable or /disableall
+• If you are after protection features you can check them trought /painel or /security
+• Now if you are after the utilities you can use /commands to check all commands. If you have any questions you use /help (commands)
 
 <code>---------------------------------------</code>
 

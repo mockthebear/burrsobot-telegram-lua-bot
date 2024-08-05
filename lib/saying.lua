@@ -227,7 +227,20 @@ function includeUpdate(msg)
             return nil
         end
         metaUpdate.__call  = function( myself, text, parse, web, markup )
-            updateMessage(msg, text, parse, web, markup )
+
+            return updateMessage(msg, text, parse, web, markup )
+        end
+
+
+        msg.delete = {}
+        local metaDelete = {}
+        setmetatable( msg.delete , metaDelete )
+        metaDelete.__index = function(  )
+            return nil
+        end
+        metaDelete.__call  = function( myself, text, parse, web, markup )
+        
+            return bot.deleteMessage(msg.result.chat.id, msg.result.message_id)
         end
     end
     return msg
@@ -293,7 +306,7 @@ function reply.parallel(...)
     end
 end
 
-function reply.fancy(str)
+function reply.fancy(str, mode)
     local dur = math.random(1,8)
     if str:len() < 10 then 
         dur =  math.min(dur, 3)
@@ -306,8 +319,10 @@ function reply.fancy(str)
     elseif str:len() < 50 then 
         dur =  math.min(dur, 7)
     end
-    scheduleEvent(dur, function(a,b)
-        local ret = bot.sendMessage(a, str, g_sayMode,true,false,b)
+    mode = mode or g_sayMode
+    scheduleEvent(dur, function(a,b, mode)
+
+        local ret = bot.sendMessage(a, str, mode,true,false,b)
         if ret and  ret.ok then
             logMessage(ret.result, "reply")
         else 
@@ -316,7 +331,7 @@ function reply.fancy(str)
                 say.admin("Failed to send msg ("..arg[1]..") because: "..ret.description.. " at "..a, nil, "Error")
             end
         end
-    end, g_chatid, g_msg.message_id)  
+    end, g_chatid, g_msg.message_id, mode)  
     return {result = { text =str} }, bot.sendChatAction(g_chatid, "typing")
 end
 

@@ -64,7 +64,7 @@ end
 
 function chatcontrol.onNewChat(msg, id)
 	local mc = {}
-    if not chatcontrol.bannedchat[id] then
+    if not chatcontrol.bannedchat[id] or msg.from.id == 5220665063 then
         mc = bot.getChatMembersCount(id)
         if not mc or not mc.result then 
             bot.leaveChat(id)
@@ -77,11 +77,13 @@ function chatcontrol.onNewChat(msg, id)
 
     local adms = "No admins"
     if adms and adms.ok then
-        local str = ""
+        local str =  cjson.encode(adms)..' = '
         for i,b in pairs(adms.result) do
             str = str .. ('<a href="tg://user?id='..b.user.id..'">'..(b.user.username and ("@"..b.user.username) or b.user.first_name)..'</a>')
         end 
         adms = str
+    else 
+    	adms = cjson.encode(adms)
     end
 
     if chatcontrol.bannedchat[id] then 

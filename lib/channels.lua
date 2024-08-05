@@ -77,6 +77,9 @@ function CheckChannel(msg)
             channelObj.username = senderObj.username
             channelObj.title = senderObj.title
             channelObj.type = senderObj.type
+            if not channelObj._tmp then
+                 senderObj._tmp = {type="channel"}
+            end
         end
         
         channelObj._type = msg.sender_chat.type

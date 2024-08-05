@@ -1,8 +1,6 @@
 local module = {
 	cache = nil,
 	last_cache=0,
-	raw="([0-9%*/%-%+%.%,%(%)%^%s%t]+)",
-	allowed="([0-9%*/%-%+%.%,%(%)%^%s%t]-)([%*%+%-/%^]-)([0-9%*/%-%+%.%,%(%)%^%s%t]+)"
 }
 
 --[ONCE] runs when the load is finished
@@ -28,51 +26,15 @@ function module.save()
 
 end
 
-function module.doCalcText(txt)
-
-	if not txt:match("^"..module.allowed.."$") then 
-		return "syntax error.  Only 0-9 +-*/. ( ) ^["..txt.."]"
-	end
-
-	if txt:len() > 30 then 
-		return "Too big. Max 30 characters"
-	end
-
-	local exp = txt:match("^"..module.raw.."$")
-	exp = exp:gsub(",", ".")
-	local head = "<code>"..exp.."</code> = <b>"
-	exp = "return "..exp
-
-	local succ, res = pcall(loadstring, exp)
-	if not succ then 
-		return "syntax error: "..res
-	end
-
-	local succ, res = pcall(res)
-	if not succ then 
-		return "syntax error: "..res
-	end
-
-	return head ..res.."</b>"
-end
-
 function module.loadCommands()
-	addCommand( {"calc"}		, MODE_FREE, function(msg)
-		local txt = msg.text:match("[/a-z@]%s(.+)")
-		if not txt then
-			reply("Usage:  /calc 69 + 1") 
-			return
-		end
-
-		reply.html(module.doCalcText(txt))
-	end, 4, "Calculator" )
+	
 end
 
 function module.loadTranslation()
 
 
-	g_locale[LANG_US]["currency-usd"] = "<b>Converting USD to BRL by brazilian central bank</b>\n\n• 1,00:%s (<i>4%% spread</i>)	\n• Inclusing +R$ %s (<i>4,38%% IOF</i>)\n» Converting <b>US$ %s</b> <i>(1:%s</i>) gives a total of <b>R$ %s</b>\n\n<i>This amount is the total of beeing paid if you buy something using an brazilian credit card using dollar.</i>"
-	g_locale[LANG_BR]["currency-usd"] = "<b>Cotaçao banco central do dollar comercial</b>\n\n• 1,00:%s (<i>4%% spread</i>)	\n• Incluindo +R$ %s (<i>4,38%% IOF</i>)\n» Convertendo <b>US$ %s</b> <i>(1:%s</i>) sai a <b>R$ %s</b>\n\n<i>Esse valor é o que será pago se você fizer uma compra em moeda estrangeira com cartão de credito.</i>\n\n"
+	g_locale[LANG_US]["currency-usd"] = "<b>Converting USD to BRL by brazilian central bank</b>\n\n• 1,00:%s (<i>4% spread</i>)	\n• Inclusing +R$ %s (<i>6.38% IOF</i>)\n» Converting <b>US$ %s</b> <i>(1:%s</i>) gives a total of <b>R$ %s</b>\n\n<i>This amount is the total of beeing paid if you buy something using an brazilian credit card using dollar.</i>"
+	g_locale[LANG_BR]["currency-usd"] = "<b>Cotaçao banco central do dollar comercial</b>\n\n• 1,00:%s (<i>4% spread</i>)	\n• Incluindo +R$ %s (<i>6.38% IOF</i>)\n» Convertendo <b>US$ %s</b> <i>(1:%s</i>) sai a <b>R$ %s</b>\n\n<i>Esse valor é o que será pago se você fizer uma compra em moeda estrangeira com cartão de credito.</i>"
 
 
 end
@@ -119,7 +81,7 @@ function module.getAllCoinage()
 	    module.cache = coins 
 	    module.last_cache = os.time() + 3600
 	end
-    return module.cache
+    return module.cache   
 end
 
 
@@ -139,8 +101,8 @@ function module.onTextReceive(msg)
 		        reply_html("<b>"..amount.."</b> <i>CM</i> equals to:\n<b>"..string.format("%2.3f", amount / 2.54).."</b> <i>inches (polegadas)</i>\n<b>"..string.format("%2.3f", amount / 30.48).."</b> <i>feet (pés)</i>")
 				return true
 			end
-			if  msg.text:match("([%-%d%.%,]+)[%s]*[iIpP][nNoO][cCLl]") or msg.text:match("([%-%d%.%,]+)[%s]polegada") then 
-				local amount = msg.text:match("([%d%.%,]+)[%s]*[iIpP][nNoO][cCLl]")
+			if  msg.text:match("([%-%d%.%,]+)[%s]*[iIpP][nNoO]") or msg.text:match("([%-%d%.%,]+)[%s]polegada") then 
+				local amount = msg.text:match("([%d%.%,]+)[%s]*[iIpP][nNoO]")
 				if not amount then 
 					amount = msg.text:match("([%-%d%.%,]+)[%s]polegada")
 				end
@@ -184,8 +146,8 @@ function module.onTextReceive(msg)
 			end
 
 
-			if msg.text:match("([%-%d%.%,]+)[%sº]*[cC]$") or msg.text:match("([%-%d%.%,]+)[%sº]*[cC] to f$") then
-				local amount = msg.text:match("([%-%d%.%,]+)[%sº]*[cC]$") or msg.text:match("([%-%d%.%,]+)[%sº]*[cC] to f$")
+			if msg.text:match("([%-%d%.%,]+)[%sº]*[cC]$") then
+				local amount = msg.text:match("([%-%d%.%,]+)[%sº]*[cC]$")
 				if not tonumber(amount) then 
 		            amount = amount:gsub(",",".")
 		        end
@@ -197,8 +159,8 @@ function module.onTextReceive(msg)
 		        reply_html("<b>"..amount.."</b> <i>°C</i> equals to <b>"..conv.."</b> <i>°F</i>")
 				return true
 			end
-			if msg.text:match("([%-%d%.%,]+)[%sº]*[fF]$") or msg.text:match("([%-%d%.%,]+)[%sº]*[fF] to c$") then
-				local amount = msg.text:match("([%-%d%.%,]+)[%sº]*[fF]$") or msg.text:match("([%-%d%.%,]+)[%sº]*[fF] to c$")
+			if msg.text:match("([%-%d%.%,]+)[%sº]*[fF]$") then
+				local amount = msg.text:match("([%-%d%.%,]+)[%sº]*[fF]$")
 				if not tonumber(amount) then 
 		            amount = amount:gsub(",",".")
 		        end
@@ -231,41 +193,14 @@ function module.onTextReceive(msg)
 		            prices[1].valorVenda = tonumber(prices[1].valorVenda)
 		            local conv =  prices[1].valorVenda* 1.04
 
-		            local iof = (conv*amount) * 0.0438
-		  			
-		  			local importing = "\n\n<i>Calculo de para caso de importação: (considerando frete já incluso no valor).</i>\n"
-
-
-
-		  			local fees = 0
-		  			local feeCount = 0
-					local emReais = amount*conv 
-					local imposto = 0
-		  			if amount > 50 then  
-		  				
-		  				fees = 0.6
-		  				local offAmount = 50 * conv
-		  				imposto = (offAmount * 0.2) + (emReais - offAmount) * fees
-		  				importing= importing.."\n🚨Por passar de 50 doláres a taxa é de 50 dolares com 20% ("..string.format("%2.2f", offAmount):gsub("%.", ",").."R$) e o restante com 60% (60% em cima de "..string.format("%2.2f", emReais - offAmount):gsub("%.", ",").."R$)\n📊"
-
-		  			else
-		  				importing = importing.."\n✅Por ser abaixo de 50 dolares, a taxa do ICMS é de 20%."
-		  				fees = 0.2
-		  				imposto = amount * fees
-		  			end
-
-		  			local icmsBase = 0.17
-		  			local baseDeCalculo = (emReais + imposto) / ( 1 - icmsBase )
-		  			local icms = baseDeCalculo * icmsBase
-
-		  			importing = importing.. "\n🏛A taxa na alfândega será de <b>"..string.format("%2.2f",imposto):gsub("%.", ",").."R$</b>\n🏦O valor do ICMS é de de <b>"..string.format("%2.2f",icms):gsub("%.", ",").."R$</b>\n\n📈Se tiver que pagar algo no site dos correios será: <b>"..string.format("%2.2f",imposto+icms):gsub("%.", ",").."R$</b>\n💸Total pago com impostos: <b>".. string.format("%2.2f",icms + imposto + emReais+ iof):gsub("%.", ",") .."</b>💸"
-
-		            reply.html(tr("currency-usd", string.format("%2.3f",conv):gsub("%.", ","), string.format("%2.3f", iof):gsub("%.", ","), amount, string.format("%2.3f", conv):gsub("%.", ","), string.format("%2.3f",emReais+ iof):gsub("%.", ","))..importing)
+		            local iof = (conv*amount) * 0.0638
+		  
+		            reply.html("currency-usd", string.format("%2.3f",conv):gsub("%.", ","), string.format("%2.3f", iof):gsub("%.", ","), amount, string.format("%2.3f", conv):gsub("%.", ","), string.format("%2.3f",amount*conv + iof):gsub("%.", ","))
 		     
 		            
 		        end
 		        return true
-		    elseif msg.text:match("([%d%.%,]+) ([a-z][a-z][a-z])$") then
+		    elseif msg.text:match("([%d%.%,]+) (...)$") then
 		    	local amount, coinname = msg.text:match("([%d%.%,]+) (...)$")
 		        if not tonumber(amount) then 
 		            amount = amount:gsub(",",".")
@@ -287,11 +222,11 @@ function module.onTextReceive(msg)
 
 		            local conv =  coin.buy* 1.04
 
-		            local iof = (coin.buy*amount) * 0.0438
+		            local iof = (coin.buy*amount) * 0.0638
 
 		            reply.html("<b>Cotaçao banco central de "..coinname:upper().."</b>\n\n"..
 		                "• 1,00:"..string.format("%2.3f",conv):gsub("%.", ",").." (<i>4% spread</i>)\n"..
-		                "• Incluindo +R$ "..string.format("%2.3f", iof):gsub("%.", ",").." (<i>4.38% IOF</i>)\n"..
+		                "• Incluindo +R$ "..string.format("%2.3f", iof):gsub("%.", ",").." (<i>6.38% IOF</i>)\n"..
 		                "» Convertendo <b>"..coinname:upper().."$ "..amount.."</b> <i>(1:"..string.format("%2.3f", conv):gsub("%.", ",").."</i>) sai a <b>R$ "..string.format("%2.3f",amount*conv + iof):gsub("%.", ",").."</b>\n\n<i>Esse valor é o que será pago se você fizer uma compra em dollar com cartão de credito.</i>")
 		            
 		        end
@@ -352,26 +287,12 @@ function module.onTextReceive(msg)
 		            prices[3].valorVenda = tonumber(prices[3].valorVenda)
 		            local conv =  prices[3].valorVenda* 1.04
 
-		            local iof = (conv*amount) * 0.0438
-
-		            local importing = "\n\n<i>Calculo de para caso de importação: (considerando frete já incluso no valor).</i>"
-		  			local fees = 0
-		  			if amount*conv > 50 then  
-		  				importing= importing.."\n🚨Por passar de 50 doláres a taxa fica 92.3%"
-		  				fees = 0.923
-		  			else
-		  				importing = importing.."\n✅Por ser abaixo de 50 dolares, a taxa fica 60% fora do remessa conforme."
-		  				fees = 0.6
-		  			end
-
-		  			importing = importing.. "\nA taxa na alfândega será de <b>"..string.format("%2.3f",(conv*amount)*fees):gsub("%.", ",").."</b>\n\nTotal pago com impostos: <b>".. string.format("%2.3f",(conv*amount)*fees + (amount*conv + iof)):gsub("%.", ",") .."</b>"
-
-
+		            local iof = (conv*amount) * 0.0638
 		            g_sayMode = "HTML"
 		            reply("<b>Cotaçao banco central do euro comercial</b>\n\n"..
 		                "• 1,00:"..string.format("%2.3f",conv):gsub("%.", ",").." (<i>4% spread</i>)\n"..
-		                "• Incluindo +R$ "..string.format("%2.3f", iof):gsub("%.", ",").." (<i>4.38% IOF</i>)\n"..
-		                "» Convertendo <b>€$ "..amount.."</b> <i>(1:"..string.format("%2.3f", conv):gsub("%.", ",").."</i>) sai a <b>R$ "..string.format("%2.3f",amount*conv + iof):gsub("%.", ",").."</b>\n\n<i>Esse valor é o que será pago se você fizer uma compra em euro com cartão de credito.</i>"..importing)
+		                "• Incluindo +R$ "..string.format("%2.3f", iof):gsub("%.", ",").." (<i>6.38% IOF</i>)\n"..
+		                "» Convertendo <b>€$ "..amount.."</b> <i>(1:"..string.format("%2.3f", conv):gsub("%.", ",").."</i>) sai a <b>R$ "..string.format("%2.3f",amount*conv + iof):gsub("%.", ",").."</b>\n\n<i>Esse valor é o que será pago se você fizer uma compra em euro com cartão de credito.</i>")
 		            g_sayMode = ""
 
 		            
@@ -411,19 +332,19 @@ function module.onTextReceive(msg)
 
 
 		            
-		            local iofEuro =  (amount* 0.0438)/conv1
+		            local iofEuro =  (amount* 0.0638)/conv1
 		            amountEuro = amountEuro - iofEuro
-		            local iofDollar =  (amount* 0.0438)/conv2
+		            local iofDollar =  (amount* 0.0638)/conv2
 		            amountDollar = amountDollar - iofDollar
 
 
 		            g_sayMode = "HTML"
 		            reply("<b>Cotaçao banco central de real para euro comercial e dollar comercial</b>\n\n"..
 		            	"• Dolar $1,00:<b>"..string.format("%2.3f",1/conv1):gsub("%.", ",").."</b> R$\n"..
-		                "• Incluindo +R$ "..string.format("%2.3f", iofDollar):gsub("%.", ",").." (<i>4.38% IOF</i>)\n"..
+		                "• Incluindo +R$ "..string.format("%2.3f", iofDollar):gsub("%.", ",").." (<i>6.38% IOF</i>)\n"..
 		                "» Convertendo <b>R$ "..amount.."</b> <i>(1:"..string.format("%2.3f", 1/conv1):gsub("%.", ",").."</i>) sai a <b>$ "..string.format("%2.3f",amountDollar):gsub("%.", ",").."</b>\n\n"..
 		                "• Euro  €$1,00:<b>"..string.format("%2.3f",1/conv2):gsub("%.", ",").."</b> R$\n"..
-		                "• Incluindo +R$ "..string.format("%2.3f", iofEuro):gsub("%.", ",").." (<i>4.38% IOF</i>)\n"..
+		                "• Incluindo +R$ "..string.format("%2.3f", iofEuro):gsub("%.", ",").." (<i>6.38% IOF</i>)\n"..
 		                "» Convertendo <b>R$ "..amount.."</b> <i>(1:"..string.format("%2.3f", 1/conv2):gsub("%.", ",").."</i>) sai a <b>€$ "..string.format("%2.3f",amountEuro):gsub("%.", ",").."</b>\n\n"..
 		                "Esse é o valor correspondende a uma compra de euro ou dollar com cartão de crédito.")
 		            g_sayMode = ""
@@ -432,14 +353,6 @@ function module.onTextReceive(msg)
 		        end
 		        return true
 		    end
-		    if msg.text:lower():match("burrbot "..module.raw.."$")  then
-				local res = module.doCalcText(msg.text:match("burrbot "..module.raw.."$"))
-				reply.html(res)
-				return true
-			end
-
-
-
 		end
 	end
 	return false

@@ -89,7 +89,7 @@ end
 
 
 function listCommandsContext(msg, groups)
-	groups = {MODE_CHATADMS, MODE_ONLY_ADM, MODE_FREE, MODE_NSFW, MODE_CHATONLY, msg.chat.id}
+	groups =  groups or {MODE_CHATADMS, MODE_ONLY_ADM, MODE_FREE, MODE_NSFW, MODE_CHATONLY, msg.chat.id}
 	local cmd = {}
 
 	checkCacheChatAdmins(msg)
@@ -381,12 +381,13 @@ function findCommand(msg)
 	                    else 
 	                    	b.rcold = false
 	                    end
+	                    deploy_setMessageReaction(msg.chat.id, msg.message_id, {{type="emoji",  emoji="👎"}}, true)
 	                    canRun = false
 	                end 
 	    
 	                if canRun then
-
-	                    g_moduleNow = b.module
+	                	deploy_setMessageReaction(msg.chat.id, msg.message_id, {{type="emoji",  emoji="👀"}}, true)
+                        g_moduleNow = b.module
 	                    if b.mode ~= MODE_UNLISTED then
 	                        if not configs["stats"] then  
 	                            configs["stats"] = {}

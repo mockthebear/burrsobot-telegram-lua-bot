@@ -58,6 +58,9 @@ function loadUser(id)
         end
         miniUser._tmp = {type="user"}
         miniUser._type = "user"
+        if not miniUser.joinDate then 
+            miniUser.joinDate={}
+        end
         if miniUser.username then 
             users[miniUser.username] = miniUser
         end
@@ -72,6 +75,7 @@ function isUserChatAdmin(chat, id)
         if not msg.chat then 
             return false
         end
+        checkCacheChatAdminsById(msg.chat.id)
         id = msg.from.id
         if not msg.from or not msg.from.id then 
             if msg.sender_chat then 
@@ -92,6 +96,7 @@ function isUserChatAdmin(chat, id)
         id = chat.from.id
         chat = chat.chat.id
     end
+    checkCacheChatAdminsById(chat)
     if chats[chat] then 
         return chats[chat]._tmp.adms[id]
     else 

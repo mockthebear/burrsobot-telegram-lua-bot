@@ -346,7 +346,7 @@ function Dump(T, l, str, supress)
     if type(l) ~= number then
         l = 1
     end
-    supress = supress or {["_tmp"]=false}
+    supress = supress or {["_tmp"]=true}
     if not T then 
         return tostring(T)
     end
@@ -765,7 +765,12 @@ function logMessage(msg, typ)
            	local header = msg.message_id.." | ".. os.date("%d/%m/%y %H:%M:%S", tonumber(msg.date)) 
 
 
-            local name =  "["..msg.from.id.."] " .. msg.from.first_name
+            local name =  "["..msg.from.id
+
+            if msg.from.username and msg.from.username ~= "" then 
+                name = " @"..msg.from.username
+            end
+            name = name .."] " .. msg.from.first_name
 
             header = header.." | "..name..": "
 

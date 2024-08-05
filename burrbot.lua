@@ -128,6 +128,7 @@ end
 
 extension.onNewChatParticipant = function(msg)
 	if (msg.date - os.time()) < -10 then 
+		print("Dropped new chat participant!")
         return false
     end
 
@@ -135,12 +136,13 @@ extension.onNewChatParticipant = function(msg)
     msg.from = msg.new_chat_participant
 
 	if not formatMessage(msg) then 
+		print("Failed format on onNewChatParticipant")
 		return
 	end
 
 	CheckUserForced(msg.new_chat_participant)
 
-	logMessage(msg, "onNewChatParticipant ")
+	logMessage(msg, "onNewChatParticipant")
 
 	--Store user joins
 	chats[msg.chat.id]._tmp.newUser[msg.new_chat_participant.id] = true
@@ -162,7 +164,7 @@ extension.onPhotoReceive = function(msg)
 	if not formatMessage(msg) then 
 		return
 	end
-
+	
 	logMessage(msg, "onPhotoReceive")
 
 	if not runModulesMethod(msg, "onPhotoReceive") then 
@@ -365,6 +367,13 @@ extension.onScheduleWarning = function (msgs)
 	end
 end
 
+extension.onChannelPost = function (msg)
+	print("Channel post: "..cjson.encode(msg))
+
+	if not runModulesMethod(msg, "onChannelPost") then 
+		return
+	end
+end
 extension.onTextReceive = function (msg)
 	 
 	if msg.chat.type == "private" then 
@@ -378,7 +387,6 @@ extension.onTextReceive = function (msg)
 
 	if msg.text:sub(1,1) == "/" then
 		print("[COMMAND] {"..msg.chat.type ..  (msg.chat.type ~= "private" and (" : "..msg.chat.title)   or "") .." : "..msg.chat.id.."} "..(msg.from.username and ("@"..msg.from.username) or msg.from.first_name)..": "..msg.text)
-    	deploy_setMessageReaction(msg.chat.id, msg.message_id, {{type="emoji",  emoji="👀"}}, true)
     	logText("commands", os.date("%d/%m/%y %H:%M:%S",os.time()).." command=\""..msg.text.."\" by="..msg.chat.id.." name=\""..msg.from.first_name.."\" username=\""..(msg.from.username or "-").."\" at=\"".. (msg.chat.type ~= "private" and (msg.chat.title)   or msg.chat.type).."\" chatid="..msg.chat.id.."\n")
 	end
 

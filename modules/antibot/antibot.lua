@@ -19,6 +19,7 @@ function antibot.load()
 		pubsub.registerExternalVariable("chat", "antibot_ban_duration", {type="number", default=3600 * 24}, true, "Ban duration in seconds (default is 24h or 86400 seconds)", "Anti-bot")
 		pubsub.registerExternalVariable("chat", "kick_say", {type="boolean"}, true, "Kick if the person joins and says nothing for 2 minutes", "Anti-bot")
 		pubsub.registerExternalVariable("chat", "auto_kick", {type="boolean"}, true, "Enable autokick for users without profile picute or name equal '.'", "Anti-bot")
+		pubsub.registerExternalVariable("chat", "ban_no_username", {type="boolean"}, true, "Auto ban users without username  (without an @user)", "Anti-bot")
 	end
 	if core then  
 		core.addStartOption("Anti bot protection", "OwO", "nobot", function() return tr("antibot-start-desc") end )
@@ -75,7 +76,7 @@ function antibot.onTextReceive( msg )
 		if chats[msg.chat.id]._tmp.checking[msg.from.id] then
 			if chats[msg.chat.id].data.botPublic then 
 				users[msg.from.id]._tmp.bot_attempts = (users[msg.from.id]._tmp.bot_attempts or 0) +1
-				if chats[msg.chat.id]._tmp.checking[msg.from.id] == msg.text:lower() then 
+				if chats[msg.chat.id]._tmp.checking[msg.from.id] == msg.text:lower() or chats[msg.chat.id]._tmp.checking[msg.from.id]:sub(2,5) == msg.text:lower() then 
 					antibot.releaseBot({id=msg.chat.id, title="?"}, msg.from)
 					deploy_deleteMessage(msg.chat.id, msg.message_id)
 				else 
@@ -119,10 +120,10 @@ function antibot.onTextReceive( msg )
 
 		chats[msg.chat.id]._tmp.say_enter[msg.from.id] = (chats[msg.chat.id]._tmp.say_enter[msg.from.id] or 2) +1
  
-		if chats[msg.chat.id].data.no_nudes then  
-			local opUser, which = getEntity(msg)
+		if chats[msg.chat.id].data.no_nudes and msg.from.id then  
+			local opUser, which = getUser(msg.from.id)
 			if which ~= "chat" and opUser then
-				local dur = os.time() - opUser.joinDate[msg.chat.id] or os.time() - 300
+				local dur = os.time() - (opUser.joinDate[msg.chat.id] or os.time()) - 300
 				if opUser and opUser.joinDate[msg.chat.id] and dur <= 300 then
 					if hasLink(msg.text) then
 						bot.sendMessage(msg.chat.id, tr("antibot-nolinks" ,selectUsername(msg, true),(300-dur)), "HTML")
@@ -262,9 +263,12 @@ function antibot.onPhotoReceive(msg)
 		end
 
 		if chats[msg.chat.id].data.no_nudes then  
-			local opUser = getEntity(msg)
-			local dur = os.time() - opUser.joinDate[msg.chat.id]
-			if opUser.joinDate[msg.chat.id] and dur <= 300 then
+			local opUser = getUser(msg.from.id)
+			if not opUser.joinDate then 
+				opUser.joinDate = {}
+			end
+			local dur = os.time() - (opUser.joinDate[msg.chat.id] or 0)
+			if opUser.joinDate[msg.chat.id] ~= nil and dur <= 300 then
 
 				bot.sendMessage(g_chatid, "User "..selectUsername(msg, true).." you dont have the right to send photos here YET. Im deleting and restricting you for "..(300-dur).." seconds.", "HTML")
 
@@ -320,6 +324,8 @@ function antibot.onNewChatParticipant(msg)
 	end
 	local restricted = false
 
+	print("User "..msg.new_chat_participant.id.." joined "..msg.chat.id)
+
 	if users[msg.new_chat_participant.id] then
 
 		if (chats[msg.chat.id].data.botProtection) then
@@ -363,16 +369,25 @@ function antibot.onNewChatParticipant(msg)
 
 					if chats[msg.chat.id].data.auto_kick then
 						if msg.new_chat_participant.first_name == "." then 
+							print("Name is .")
 							autoKick = true
 						end
 						local res = bot.getUserProfilePhotos(msg.new_chat_participant.id, 0, 1)
 						if res.result and res.result.total_count == 0 then 
+							print("No pfp")
+							autoKick = true
+						end
+					end
+
+					if chats[msg.chat.id].data.ban_no_username then
+						if msg.new_chat_participant.username == nil or msg.new_chat_participant.username == "" then 
+							print("No username")
 							autoKick = true
 						end
 					end
 
 					if autoKick then 
-
+						print('IS AUTOBAN')
 
 						antibot.doKickUser( {
 							id = msg.new_chat_participant.id, 
@@ -426,6 +441,8 @@ function antibot.onNewChatParticipant(msg)
 	            bot.restrictChatMember(targetChat, id, os.time()+300, false, false, false, true)
 	        end 
    		end
+   	else 
+   		print("User is big missing!")
 
 	end
 
@@ -697,7 +714,8 @@ function antibot.botUserCheck(msg, msg_delete)
         if msg_delete then
          	bot.deleteMessage(msg.chat.id, msg_delete)
         end
-        if chats[msg.chat.id]._tmp.checking[msg.from.id] then 
+        if chats[msg.chat.id]._tmp.checking[msg.from.id] then
+        	print("IS CHECK") 
         	antibot.doKickUser(msg, nil)
         else 
             --bot.sendMessage(msg.chat.id,"User confirmed.")
@@ -807,7 +825,6 @@ function antibot.loadCommands()
 	addCommand( "notabot" 					, MODE_UNLISTED, getModulePath().."/rlsbot.lua", 2 , "-" )
 	addCommand( "human" 					, MODE_ONLY_ADM, getModulePath().."/human.lua", 2 , "-" )
 	addCommand( "botprotection"				, MODE_CHATADMS, getModulePath().."/botprotecc.lua", 2, "antibot-desc"  )
-	addCommand( "botcheck"					, MODE_CHATADMS, getModulePath().."/checkbot.lua", 2, "Força a verificação de bot em um usuario."  )
 	addCommand( "nomedia"					, MODE_CHATADMS, getModulePath().."/nophoto.lua", 2, "Liga/Desliga proteção contra midia direta."  )
 end
 

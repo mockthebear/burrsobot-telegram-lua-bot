@@ -16,7 +16,7 @@ function ignoring.setIgnored(chatid, id, ignored)
 	if not type(chats[chatid].data.ignored) ~= "table" then 
 		chats[chatid].data.ignored = {}
 	end
-	ignoring.ignored[id] = ignored and true or nil
+	chats[chatid].data.ignored = ignored and true or nil
 	SaveChat(chatid)
 end
 
@@ -131,7 +131,7 @@ end
 function ignoring.loadCommands()
 	
 	addCommand( "ignore"					, MODE_CHATADMS, getModulePath().."/ignore-user.lua", 2, "ignored-desc"  )
-	addCommand( "block"					, MODE_ONLY_ADM, getModulePath().."/ignore-global.lua", 2, "ignored-g-desc"  )
+	addCommand( "block"						, MODE_ONLY_ADM, getModulePath().."/ignore-global.lua", 2, "ignored-g-desc"  )
 end
 
 

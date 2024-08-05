@@ -40,7 +40,6 @@ end
 
 function captcha.loadCommands()
 	addCommand( {"captcha"}		, MODE_ONLY_ADM, function(msg, text, attrs) --No chat pra tudo.
-	    say("vam")
 	    captcha.startCaptchaProcedure(msg.chat.id, msg.from.id, "pinto", function()
 	    	reply("aeeeee")
 	    end, function()
@@ -76,7 +75,7 @@ function captcha.onTextReceive(msg)
 			end
 			local seqParse = msg.text:gsub("o", 0)
 			seqParse = seqParse:gsub("%s", "")
-			if seqParse == seq.secret then 
+			if seqParse == seq.secret or seqParse == tostring(seq.secret):sub(2,5) then 
 				seq.success = true
 				seq.onSucces(msg, seq)
 				captcha.sequences[captchaId] = nil

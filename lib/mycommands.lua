@@ -227,7 +227,7 @@ function setCommandsToContext(commands, context, wordIndex, chatid, userid, lang
 		end
 	end
 
-	print(cjson.encode(commandList))
+	--print(cjson.encode(commandList))
 	local mode = context
 	local res = bot.setMyCommands(cjson.encode(commandList), cjson.encode({type=mode, chat_id=chatid, user_id=user_id}), languageCode)
 	if res.ok then 

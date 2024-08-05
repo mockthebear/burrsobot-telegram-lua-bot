@@ -3,12 +3,11 @@ function OnCommand(msg, aaa, args, targetChat)
 
 	local chatId = msg.chat.id
 	msg.chat.id = targetChat
+	msg.isChat = true
 	local commandText = core.listCommandsFancy(msg)
 	
 	if msg.chat.type == "private" then
 		local keyb = {}
-		say("bingas")
-
 		keyb[1] = {}
 		keyb[1][1] = {text = tr("core-botmenu"), callback_data = "start:" .. (getUserLang(msg) == LANG_BR and "br" or "us") }
 
