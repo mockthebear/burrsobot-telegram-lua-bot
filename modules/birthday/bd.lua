@@ -1,6 +1,6 @@
 function OnCommand(msg, aa, args)
     if not chats[msg.chat.id] then 
-        say("This only works on chats")
+        say("This command is for groupchats only")
         return
     end
     local usr = getTargetUser(msg, true)
