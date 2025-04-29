@@ -28,7 +28,7 @@ function raffle.loadCommands()
 end
 
 function raffle.loadTranslation()
-	g_locale[LANG_US]["raffle-desc"] = "Displaya cake"
+	g_locale[LANG_US]["raffle-desc"] = "Display a cake"
 	g_locale[LANG_BR]["raffle-desc"] = "Mostra um bolo"
 
 
@@ -37,7 +37,7 @@ function raffle.loadTranslation()
 
 
 	g_locale[LANG_US]["raffle-gen-sub"] = "❗️Toggle entries❗️"
-	g_locale[LANG_BR]["raffle-gen-sub"] = "❗️Encerrar/Abrir inscriçoes❗️"
+	g_locale[LANG_BR]["raffle-gen-sub"] = "❗️Encerrar/Abrir inscrições❗️"
 
 
 
@@ -50,7 +50,7 @@ function raffle.loadTranslation()
 	g_locale[LANG_BR]["raffle-manager"] = "Gerenciador de sorteio.\n\n"
 
 
-	g_locale[LANG_US]["raffle-gen-chat-only"] = "This command only works on chats... But for you im gonna generate a random number between 0 and 100 and it is: <b>%s</b>!"
+	g_locale[LANG_US]["raffle-gen-chat-only"] = "This command only works on chats... But for you, I'm gonna generate a random number between 0 and 100 and it is: <b>%s</b>!"
 	g_locale[LANG_BR]["raffle-gen-chat-only"] = "Esse comando só funciona em chats... Mas não vou te deixar na mão. Sortearei um numero de 0 a 100, e ele é <b>%s</b>!"
 
 
@@ -82,7 +82,7 @@ function raffle.loadTranslation()
 	g_locale[LANG_US]["raffle-already-in"] = "You are already in the raffle"
 	g_locale[LANG_BR]["raffle-already-in"] = "Você ja está no sorteio!"
 
-	g_locale[LANG_US]["raffle-now-open"] = "Raffle aberto!"
+	g_locale[LANG_US]["raffle-now-open"] = "Raffle open!"
 	g_locale[LANG_BR]["raffle-now-open"] = "Sorteio aberto!"
 
 	g_locale[LANG_US]["raffle-now-closed"] = "Raffle closed"
