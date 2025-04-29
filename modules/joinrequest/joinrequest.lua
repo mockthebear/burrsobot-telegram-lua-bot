@@ -5,7 +5,7 @@ local module = {
 --[ONCE] runs when the load is finished
 function module.load()
 	if pubsub then
-		pubsub.registerExternalVariable("chat", "joinRequest", {type="boolean"}, true, "Warn admin about join requests (need bot as admin)", "Misc")
+		pubsub.registerExternalVariable("chat", "joinRequest", {type="boolean"}, true, {"Avisar o administrador sobre solicitações de entrada (necessário que o bot seja admin)", "Warn admin about join requests (need bot as admin)"}, "Misc")
 	end
 end
 

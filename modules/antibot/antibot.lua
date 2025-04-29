@@ -8,18 +8,18 @@ local antibot = {
 --[ONCE] runs when the load is finished
 function antibot.load()
 	if pubsub then
-		pubsub.registerExternalVariable("chat", "botProtection", {type="boolean"}, true, "Enable anti-bot protection (captcha)", "Anti-bot")
-		pubsub.registerExternalVariable("chat", "botPublic", {type="boolean"}, true, "Bot will send the captcha in the group instead of private. The user will be able to send messages but if he dont do the captcha he'll be kicked", "Anti-bot")
-		pubsub.registerExternalVariable("chat", "botEnforced", {type="boolean"}, true, "Enforce bot protection (force the check on any users)", "Anti-bot")
-		pubsub.registerExternalVariable("chat", "ignoreInviteLink", {type="boolean"}, true, "Make bot protection ignore users who joined via a invite link", "Anti-bot")
-		pubsub.registerExternalVariable("chat", "no_nudes", {type="boolean"}, true, "Restrict user from posting media for 5 minutes on join.", "Anti-bot")
-		pubsub.registerExternalVariable("chat", "easyBot", {type="boolean"}, true, "Easy check (single click). This is unsafe.", "Anti-bot")
-		pubsub.registerExternalVariable("chat", "purge_message", {type="boolean"}, true, "Automatically delete telegram default message of 'user joined chat'", "Anti-bot")
-		pubsub.registerExternalVariable("chat", "antibot_duration", {type="number", default=120}, true, "Captcha duration", "Anti-bot")
-		pubsub.registerExternalVariable("chat", "antibot_ban_duration", {type="number", default=3600 * 24}, true, "Ban duration in seconds (default is 24h or 86400 seconds)", "Anti-bot")
-		pubsub.registerExternalVariable("chat", "kick_say", {type="boolean"}, true, "Kick if the person joins and says nothing for 2 minutes", "Anti-bot")
-		pubsub.registerExternalVariable("chat", "auto_kick", {type="boolean"}, true, "Enable autokick for users without profile picute or name equal '.'", "Anti-bot")
-		pubsub.registerExternalVariable("chat", "ban_no_username", {type="boolean"}, true, "Auto ban users without username  (without an @user)", "Anti-bot")
+		pubsub.registerExternalVariable("chat", "botProtection", {type="boolean"}, true, {"Habilitar proteção anti bot (captcha)", "Enable anti-bot protection (captcha)"}, "Anti-bot")
+		pubsub.registerExternalVariable("chat", "botPublic", {type="boolean"}, true, {"O bot enviará o captcha no grupo em vez de no privado. O usuário poderá enviar mensagens, mas se não fizer o captcha será expulso", "Bot will send the captcha in the group instead of private. The user will be able to send messages but if he don't do the captcha he'll be kicked"}, "Anti-bot")
+		pubsub.registerExternalVariable("chat", "botEnforced", {type="boolean"}, true, {"Aplicar proteção anti bot (forçar a verificação em todos os usuários)", "Enforce bot protection (force the check on any users)"}, "Anti-bot")
+		pubsub.registerExternalVariable("chat", "ignoreInviteLink", {type="boolean"}, true, {"Fazer com que a proteção anti bot ignore usuários que entraram através de um link de convite", "Make bot protection ignore users who joined via an invite link"}, "Anti-bot")
+		pubsub.registerExternalVariable("chat", "no_nudes", {type="boolean"}, true, {"Restringir o usuário de postar mídia por 5 minutos ao entrar", "Restrict user from posting media for 5 minutes on join"}, "Anti-bot")
+		pubsub.registerExternalVariable("chat", "easyBot", {type="boolean"}, true, {"Verificação fácil (um clique). Isso é inseguro", "Easy check (single click). This is unsafe"}, "Anti-bot")
+		pubsub.registerExternalVariable("chat", "purge_message", {type="boolean"}, true, {"Excluir automaticamente a mensagem padrão do telegrama de 'usuário entrou no chat'", "Automatically delete telegram default message of 'user joined chat'"}, "Anti-bot")
+		pubsub.registerExternalVariable("chat", "antibot_duration", {type="number", default=120}, true, {"Duração do captcha", "Captcha duration"}, "Anti-bot")
+		pubsub.registerExternalVariable("chat", "antibot_ban_duration", {type="number", default=3600 * 24}, true, {"Duração do banimento em segundos (o padrão é 24h ou 86400 segundos)", "Ban duration in seconds (default is 24h or 86400 seconds)"}, "Anti-bot")
+		pubsub.registerExternalVariable("chat", "kick_say", {type="boolean"}, true, {"Expulsar se a pessoa entrar e não disser nada por 2 minutos", "Kick if the person joins and says nothing for 2 minutes"}, "Anti-bot")
+		pubsub.registerExternalVariable("chat", "auto_kick", {type="boolean"}, true, {"Habilitar autoexpulsão para usuários sem foto de perfil ou com nome igual a '.'", "Enable autokick for users without profile picture or name equal to '.'"}, "Anti-bot")
+		pubsub.registerExternalVariable("chat", "ban_no_username", {type="boolean"}, true, {"Banir automaticamente usuários sem nome de usuário (sem um @user)", "Auto ban users without username (without an @user)"}, "Anti-bot")
 	end
 	if core then  
 		core.addStartOption("Anti bot protection", "OwO", "nobot", function() return tr("antibot-start-desc") end )
@@ -329,7 +329,7 @@ function antibot.onNewChatParticipant(msg)
 	if users[msg.new_chat_participant.id] then
 
 		if (chats[msg.chat.id].data.botProtection) then
-
+			print("User "..msg.new_chat_participant.id.." joined "..chats[msg.chat.id].title.." with antibot")
 			local shouldCheck = true
 			if not chats[msg.chat.id].data.botEnforced then 
 				if users[msg.new_chat_participant.id].is_human_permanent then 
@@ -406,7 +406,7 @@ function antibot.onNewChatParticipant(msg)
 					else
 						bot.restrictChatMember(msg.chat.id, msg.new_chat_participant.id, -1, false, false, false, false)						
 					end
-
+					print("User "..msg.new_chat_participant.id.." is receiving captcha "..chats[msg.chat.id].title.." with antibot")
 					local msger = antibot.formatKickMessage(msg.chat.id,msg.new_chat_participant.id, msg.new_chat_participant.first_name, msg.new_chat_participant.originalUname, reason, g_msg.message_id)
 
 					if not msger.result then 
@@ -424,7 +424,11 @@ function antibot.onNewChatParticipant(msg)
 
 					SaveUser(msg.new_chat_participant.id)
 					restricted = true
+				else 
+					print("User "..msg.new_chat_participant.id.." also dont need captcha!")
 				end
+			else 
+				print("User "..msg.new_chat_participant.id.." done need captcha!")
 			end
 
 			if not fromLink and  users[msg.new_chat_participant.id].bot_banned and ( tonumber(users[msg.new_chat_participant.id].bot_banned) or os.time()+9999) > os.time() then 
@@ -434,6 +438,8 @@ function antibot.onNewChatParticipant(msg)
 					chats[msg.chat.id].data.botProtection and "" or "\nMight be a good idea enable /botprotection"
 					),"HTML"))
 			end
+		else
+			print("There is no antibot activated")
 		end
 
 		if not users[msg.new_chat_participant.id].bot_banned and not chats[msg.chat.id]._tmp.checking[msg.new_chat_participant.id] then
@@ -739,7 +745,6 @@ function antibot.forceBotCheck(msg, reason)
         print("Proc: "..users[msg.from.id].bot_procedure_check)
     end  
 end
-
 
 function antibot.loadTranslation()
 	g_locale[LANG_BR]["antibot-enter-message"] = 'Olá %s. Por conta de %s eu preciso que você prove que você não é um bot.\n\n<b>Você tem 2 minutos para apertar o botão se não será banido automaticamente.</b>\nBasta apertar no botão que vai encaminhar para o bot, e dar start.'

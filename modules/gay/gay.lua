@@ -46,8 +46,7 @@ function module.loadCommands()
 		local keyb = {}
 		keyb[1] = {}
 		keyb[1][1] = { text = " 🏳️‍🌈Press here if you are gay🏳️‍🌈", callback_data = "gay"} 
-		local JSON = require("JSON")
-		local kb2 = JSON:encode({inline_keyboard = keyb})
+		local kb2 = cjson.encode({inline_keyboard = keyb})
 
 		bot.sendMessage(g_chatid, "WHO PRESSES FIRST IS GAY", "", true, false, nil, kb2)  
 	
@@ -74,7 +73,7 @@ function module.onCallbackQueryReceive(msg)
 		    keyb[1] = {}
 		    keyb[1][1] = { text = "Send the gay button to someone else", switch_inline_query = "gay"} 
 
-		    local kb = JSON:encode({ inline_keyboard = keyb })
+		    local kb = cjson.encode({ inline_keyboard = keyb })
 		    local gg = configs["gay"].n
 		      	
 		    if msg.message then

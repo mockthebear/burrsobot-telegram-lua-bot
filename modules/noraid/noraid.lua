@@ -10,22 +10,52 @@ local noraid = {
 	    {"ethereum", "trade"},
 	    {"hail", "hitler"},
 	    {"furries are zoophil"},
+	    {"investimento"},
+	    {"criptomoedas"},
+	    {"criptomoeda"},
 	    {"faggots"},
+	    {"nazista"},
+	    {"nigger"},
+	    {"faggot"},
+	    {"day trade"},
+	    {"bolsa de valores"},
+	    {"dinheiro", "mercado"},
+	    {"dinheiro", "renda"},
+	    {"reais", "transfiro"},
+	    {"000,00", "trade"},
 	    {"crypto", "currency"},
+	    {"trade", "reais"},
 	    {"cryptocurrency"},
 	    {"fique em casa e ganhe"},
 	    {"furries are phedophi"},
+	    {"go%.hotmart%.com"}
 	},
+
+	raid_name = {
+		{"vip cp", reason= "Pedo vai pro inferno"},
+		{"vip c.-p.-🔞", reason= "Pedo vai pro inferno"},
+		{"erika brito", reason= "Scam de investimento"},
+		{"money", "shengcai", 									reason= "Scam de investimento"},
+		{"crypto", "coin", "eth" , 								reason= "Scam de investimento"},
+		{"investimento", "investimento", "investimento" , 		reason= "Scam de investimento"},
+		{"criptomoeda" , "valor" , 		reason= "Scam de investimento"},
+		{"pix", "retorno" , 									reason= "Scam de investimento"},
+	},
+
+	evil_sticker_packs = {
+		"Qhhzv_by_CalsiBot"
+	},
+
 
 	evil_whitelist = {
 		[-1001138399875] = {[818904286] = true},
-		['all'] = {[899097050] = true, [2096961757]=true}
+		['all'] = {[899097050] = true, [2096961757]=true, [655757693]=true}
 	},
 
 	channel = "@burrbanbot",
 	warnBotAdmin = true,
 
-	timeTreshhold = 1200,
+	timeTreshhold = 600,
 	bardWordsTimeTreshhold = 600,
 	mediaTreshhold = 8,
 
@@ -33,17 +63,56 @@ local noraid = {
 	priority = DEFAULT_PRIORITY - 1000200,
 }
 
+function noraid.fancyReplacer(txt)
+	txt = txt:gsub("𝐑", "r")
+	txt = txt:gsub("𝐄", "e")
+	txt = txt:gsub("𝐀", "a")
+	txt = txt:gsub("𝐈", "i")
+	txt = txt:gsub("𝐒", "s")
+	txt = txt:gsub("𝐓", "t")
+	txt = txt:gsub("𝐍", "n")
+	txt = txt:gsub("𝐅", "f")
+	txt = txt:gsub("𝐎", "o")
+	txt = txt:gsub("𝑴", "m")
+	txt = txt:gsub("𝑵", "n")
+	txt = txt:gsub("𝑼", "u")
+	txt = txt:gsub("𝑪", "c")
+
+	txt = txt:lower()
+
+	return txt
+
+end
+function noraid.checkUserName(entity)
+	for i,b in pairs(noraid.raid_name) do 
+		local foundScore = 0 
+		for a,c in pairs(b) do 
+			if type(a) == "number" then
+				if entity.first_name:lower():match(c) or (entity.last_name and entity.last_name:lower():match(c)) then 
+					foundScore = foundScore +1
+				end
+			end
+		end
+		if foundScore > 1 then 
+			users[entity.id].noraid_banned_reason = b.reason
+			return true
+		end
+	end
+	return false
+end
+
 --[ONCE] runs when the load is finished
 function noraid.load()
 	if pubsub then
-		pubsub.registerExternalVariable("chat", "simple_noraid", {type="boolean"}, true, "Ban only when the user joins", "Anti-raid")
-		pubsub.registerExternalVariable("chat", "noraid_agressive", {type="boolean"}, true, "Make noraid more agressive", "Anti-raid")
-		pubsub.registerExternalVariable("chat", "noraid", {type="boolean"}, true, "Anti raid on/off", "Anti-raid")
-		pubsub.registerExternalVariable("chat", "autoban_raid", {type="boolean"}, true, "Auto ban foreign bots", "Anti-raid")
-
-		pubsub.registerExternalVariable("chat", "raid_join_interval", {type="number",default=60}, true, "Amount of time in seconds between each join to be considered a raid", "Anti-raid")
-		pubsub.registerExternalVariable("chat", "raid_join_count", {type="number", default=4}, true, "Amount of sequential joins to be considered raid", "Anti-raid")
-		pubsub.registerExternalVariable("chat", "disable_bot_raid", {type="boolean"}, true, "Disable bot raid", "Anti-raid")
+		pubsub.registerExternalVariable("chat", "simple_noraid", {type="boolean"}, true, {"Banir apenas quando o usuário entrar", "Ban only when the user joins"}, "Anti-raid")
+		pubsub.registerExternalVariable("chat", "noraid_agressive", {type="boolean"}, true, {"Tornar o noraid mais agressivo", "Make noraid more agressive"}, "Anti-raid")
+		pubsub.registerExternalVariable("chat", "noraid", {type="boolean"}, true, {"Anti raid ligado/desligado", "Anti raid on/off"}, "Anti-raid")
+		pubsub.registerExternalVariable("chat", "autoban_raid", {type="boolean"}, true, {"Banir automaticamente bots estrangeiros (chines e russo)", "Auto ban foreign bots (chinese and russian)"}, "Anti-raid")
+		
+		pubsub.registerExternalVariable("chat", "raid_join_interval", {type="number",default=60}, true, {"Quantidade de tempo em segundos entre cada entrada para ser considerada uma raid", "Amount of time in seconds between each join to be considered a raid"}, "Anti-raid")
+		pubsub.registerExternalVariable("chat", "raid_join_media_count", {type="number",default=noraid.mediaTreshhold, min=noraid.mediaTreshhold}, true, {"Quantidade de mídias sequenciais para ser considerado spam de raid", "Amount of sequential medias to be considered raid spam"}, "Anti-raid")
+		pubsub.registerExternalVariable("chat", "raid_join_count", {type="number", default=4}, true, {"Quantidade de entradas sequenciais para ser considerada uma raid", "Amount of sequential joins to be considered raid"}, "Anti-raid")
+		pubsub.registerExternalVariable("chat", "disable_bot_raid", {type="boolean"}, true, {"Desabilitar raid de bots", "Disable bot raid"}, "Anti-raid")
 	end
 	--
 	if core then  
@@ -87,24 +156,68 @@ function noraid.noraid_bannedReason(msg)
 end
 
 function noraid.onPhotoReceive(msg)
-	return noraid.checkUserMessage(msg, true)
+	local res, inTime = noraid.checkUserMessage(msg, true, 1)
+
+	if inTime then 
+		if noraid.findRaiderWords(msg.caption or msg.description or "") then
+			noraid.TakeAction(msg, "Scam")
+			users[msg.from.id].noraid_banned_reason = "Scam"
+			users[msg.from.id].noraid_banned = true
+			SaveUser(msg.from.id)
+			deploy_deleteMessage(msg.chat.id, msg.message_id)
+		end
+	end
+
+	return res
+end
+
+function noraid.onStickerReceive(msg)
+	local res, inTime = noraid.checkUserMessage(msg, true, 1)
+
+	if inTime then 
+		if (msg.set_name and noraid.evil_sticker_packs[msg.set_name]) or (msg.file_unique_id and noraid.evil_sticker_packs[msg.file_unique_id]) then
+			noraid.TakeAction(msg, "Raider")
+			users[msg.from.id].noraid_banned_reason = "Nazi/Raid"
+			users[msg.from.id].noraid_banned = true
+			SaveUser(msg.from.id)
+			deploy_deleteMessage(msg.chat.id, msg.message_id)
+		end
+	end
+
+	return res
 end
 
 function noraid.onDocumentReceive(msg)
-	return noraid.checkUserMessage(msg, true)
+	local res, inTime = noraid.checkUserMessage(msg, true, 1)
+
+	if inTime then 
+		if noraid.findRaiderWords(msg.caption or msg.description or "") then
+			noraid.TakeAction(msg, "Scam")
+			users[msg.from.id].noraid_banned_reason = "Scam"
+			users[msg.from.id].noraid_banned = true
+			SaveUser(msg.from.id)
+			deploy_deleteMessage(msg.chat.id, msg.message_id)
+		end
+	end
+
+	return res
 end
 
 
 function noraid.onAudioReceive(msg)
-	return noraid.checkUserMessage(msg, false)
+	return noraid.checkUserMessage(msg, false, 0.5)
 end
 
 function noraid.onStickerReceive(msg)
-	return noraid.checkUserMessage(msg, false)
+	return noraid.checkUserMessage(msg, true, 0.5, true)
 end
  
 
 function noraid.findRaiderWords(txt) 
+	if not txt or txt == "" then 
+		return false
+	end
+	txt = noraid.fancyReplacer(txt)
     for i,b in pairs(noraid.badwords) do 
         local found = true
         for _,word in pairs(b) do 
@@ -142,8 +255,8 @@ end
 
 
 
-function noraid.checkUserMessage(msg, countMessage)
-
+function noraid.checkUserMessage(msg, countMessage, countAmount, critical)
+	countAmount = countAmount or 1
 	if msg.from.username then
 		if noraid.staticRaiders[msg.from.username:lower()] then
 			say.admin("<b>[NORAID]</b>\n\nFound: "..msg.from.username, "HTML")
@@ -193,6 +306,8 @@ function noraid.checkUserMessage(msg, countMessage)
 
 
 			--Check if my join date is within 1200 seconds (20 min)
+			
+		
 			if opUser.joinDate[msg.chat.id] and math.abs(opUser.joinDate[msg.chat.id]-msg.date) <= noraid.timeTreshhold then
 				if countMessage then
 					--If not the media counter is created, we create (for the chat)
@@ -206,9 +321,26 @@ function noraid.checkUserMessage(msg, countMessage)
 					--Get messages
 					local opCount = chatMain._tmp.mediaCounter[msg.from.id]
 					--Store this message~
-					opCount[#opCount+1] = {msg.date, msg.message_id}
+					opCount[#opCount+1] = {msg.date, msg.message_id, countAmount}
 
-					if (#opCount >= noraid.mediaTreshhold) then
+					local mediaTreshHold = chatObj.raid_join_media_count or noraid.mediaTreshhold
+
+					local score = 0
+					for a,c in pairs(opCount) do 
+						score = score + c[3]
+					end
+
+					local inSameMinute = 0
+					--Check if was sent at least 8 within 1 minute of difference
+					local now = msg.date
+					for i,b in pairs(opCount) do 
+						if math.abs(b[1]-now) <= 60 then 
+							inSameMinute = inSameMinute + math.max(countAmount, 1)
+						end
+					end
+
+
+					if (score >= mediaTreshHold) or (inSameMinute > mediaTreshHold/2 and critical) then
 						if not chatMain._tmp.mediaCounter.warned then 
 							chatMain._tmp.mediaCounter.warned = {}
 						end
@@ -222,17 +354,11 @@ function noraid.checkUserMessage(msg, countMessage)
 							end 
 
 						end
-						local now = msg.date
+						
 
-						local inSameMinute = 0
-						--Check if was sent at least 8 within 1 minute of difference
-						for i,b in pairs(opCount) do 
-							if math.abs(b[1]-now) <= 60 then 
-								inSameMinute = inSameMinute +1
-							end
-						end
+						
 
-						if inSameMinute >= noraid.mediaTreshhold or chatMain.noraid_agressive then 
+						if inSameMinute >= mediaTreshHold or chatMain.noraid_agressive then 
 							if not users[msg.from.id].noraid_banned then
 								noraid.TakeAction(msg, "Spam/Raider", true)
 								users[msg.from.id].noraid_banned_reason = "Spam/Raider"
@@ -300,10 +426,7 @@ function noraid.onNewChatParticipant(msg)
 
 	local fromLink = msg.actor.id ~= msg.from.id
 
-	local entity,which = getEntity(msg)
-	if which == "chat" then 
-		return nil, false
-	end
+	local entity = users[msg.new_chat_participant.id]
 
 	if  noraid.isEvilWhitelist(msg, entity) then 
 		return nil
@@ -311,7 +434,7 @@ function noraid.onNewChatParticipant(msg)
 
 
 	--Check if the user is marked as a raider~
-	if (entity.username and noraid.staticRaiders[entity.username:lower()]) or getEntity(msg).noraid_banned or noraid.staticRaiders[tostring(entity.id)]  then 
+	if (entity.username and noraid.staticRaiders[entity.username:lower()]) or entity.noraid_banned or noraid.staticRaiders[tostring(entity.id)]  then 
 		entity.noraid_banned = true
 		if (entity.username and noraid.staticRaiders[entity.username:lower()]) or noraid.staticRaiders[tostring(entity.id)] then
 			say.admin("<b>[NORAID]</b>\n\nFound: "..(entity.username or entity.id), "HTML")
@@ -325,9 +448,8 @@ function noraid.onNewChatParticipant(msg)
 	   		noraid.TakeAction(msg, whatIs)
 		else
 			noraid.WarnDisabled(msg, whatIs)
-			
 		end
-		SaveEntity(entity.id)
+		SaveUser(entity.id)
 		return KILL_EXECUTION
 	end
 
@@ -368,7 +490,7 @@ function noraid.onNewChatParticipant(msg)
 	SaveChat(msg.chat.id)
 
 	local isForeignBot = chatObj.botProtection and (isChineseBot(entity.first_name) or isArabicBot(entity.first_name) or isRussianBot(entity.first_name)) 
-	if isForeignBot then
+	if isForeignBot and chatObj.autoban_raid then
 		if isForeignBot then 
 			local whatIs = noraid.noraid_bannedReason(msg) 
 			if enabled then
@@ -378,6 +500,16 @@ function noraid.onNewChatParticipant(msg)
 			end
 			return  KILL_EXECUTION
 		end
+	end
+
+	if noraid.checkUserName(entity) then  
+		local whatIs = noraid.noraid_bannedReason(msg) 
+		if enabled then
+			noraid.TakeAction(msg, whatIs, true)
+		else
+			noraid.WarnDisabled(msg, whatIs)
+		end
+		return  KILL_EXECUTION
 	end
 
 end

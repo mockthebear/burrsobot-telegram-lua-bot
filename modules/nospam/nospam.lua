@@ -5,11 +5,12 @@ local nospam = {
 --[ONCE] runs when the load is finished
 function nospam.load()
     if pubsub then
-        pubsub.registerExternalVariable("chat", "nospam", {type="boolean"}, true, "Enable no spam", "Nospam")
-        pubsub.registerExternalVariable("chat", "maxSpamTime", {type="number", default=60}, true, "Max spam time (in seconds.) Its a rate for messages / time to trigger an action", "Nospam")
-        pubsub.registerExternalVariable("chat", "maxSpamMessages", {type="number", default=30}, true, "Max spam messages", "Nospam")
-        pubsub.registerExternalVariable("chat", "actionSpam", {type="string", valid={"ban", "warn", "lock", "mute"}, default="warn" }, true, "Action spam", "Nospam") 
-    end
+        pubsub.registerExternalVariable("chat", "nospam", {type="boolean"}, true, {"Habilitar anti-spam", "Enable no spam"}, "Nospam")
+		pubsub.registerExternalVariable("chat", "maxSpamTime", {type="number", default=60}, true, {"Tempo máximo de spam (em segundos). É uma taxa de mensagens / tempo para acionar uma ação", "Max spam time (in seconds). It's a rate for messages / time to trigger an action"}, "Nospam")
+		pubsub.registerExternalVariable("chat", "maxSpamMessages", {type="number", default=30}, true, {"Número máximo de mensagens de spam", "Max spam messages"}, "Nospam")
+		pubsub.registerExternalVariable("chat", "actionSpam", {type="string", valid={"ban", "warn", "lock", "mute"}, default="warn"}, true, {"Ação contra spam", "Action spam"}, "Nospam")
+		pubsub.registerExternalVariable("chat", "actionSpamMuteTime", {type="number", default=3600/2}, true, {"Tempo de duração do mute em segundos", "Mute duration in seconds"}, "Nospam")
+	end
 end
 
 --[ONCE] runs when eveything is ready
@@ -133,15 +134,17 @@ function nospam.check_spam_message(msg)
     end
     if msg.chat and msg.chat.id and msg.from.id then 
         local lch = chats[msg.chat.id]
+
         if lch and lch.data.nospam then 
+        	local mx = lch.data.maxSpamTime or 60
+        	local mr = lch.data.maxSpamMessages or 30
             if not lch._tmp.spam then 
                 lch._tmp.spam = {}
             end
             if not lch._tmp.spam[msg.from.id] then 
-                local mx = lch.data.maxSpamTime or 60
-                local mr = lch.data.maxSpamMessages or 30
+                
                 --[1] = 
-                lch._tmp.spam[msg.from.id] = {first_name=msg.from.first_name, max=mx, rate={0,0}, os.time(), false, mr}
+                lch._tmp.spam[msg.from.id] = {first_name=msg.from.first_name, max=mx, rate={0,0}, os.time(), false}
             end
 
             local loc = lch._tmp.spam[msg.from.id][2] == false and 1 or 2
@@ -167,7 +170,7 @@ function nospam.check_spam_message(msg)
 
             local rate = nospam.calculate_rate(lch._tmp.spam[msg.from.id])
 
-            if rate >= lch._tmp.spam[msg.from.id][3] then 
+            if rate >= mr then 
             	local opUser = getEntity(msg)
 
                 
@@ -175,7 +178,7 @@ function nospam.check_spam_message(msg)
                 	print("Rate limiting "..getEntityName(opUser))
                 	if not isEntityChatAdmin(msg) then
 	                    local action = chats[msg.chat.id].data.actionSpam or "ban"
-	                    reply(tr("nospam-taking-action", rate, lch._tmp.spam[msg.from.id][3], action))
+	                    reply(tr("nospam-taking-action", rate, mr, action))
 	                    nospam.apply_spam_action(msg, action)
 	                    lch._tmp.spam[msg.from.id] = nil
 	                    return KILL_EXECUTION
@@ -201,7 +204,7 @@ function nospam.apply_spam_action(msg, action)
         	say(tr("nospam-fail-ban", res.description))
         end
     elseif action == 'mute' then 
-        local res = bot.restrictChatMember(msg.chat.id, msg.from.id, os.time() + 3600/2, false, false, false, false)
+        local res = bot.restrictChatMember(msg.chat.id, msg.from.id, os.time() + (chats[msg.chat.id].data.actionSpamMuteTime or 3600/2), false, false, false, false)
         if not res.ok then 
         	say(tr("nospam-fail-ban", res.description))
         end

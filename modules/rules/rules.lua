@@ -5,8 +5,8 @@ local rules = {}
 --[ONCE] runs when the load is finished
 function rules.load()
 	if pubsub then
-		pubsub.registerExternalVariable("chat", "rules", {type="string", lenght=4024, fancy=true}, true, "The rules of your chat", "Rules")
-		pubsub.registerExternalVariable("chat", "rulesPvt", {type="boolean"}, true, "Show rules on private when using /rules", "Rules")
+		pubsub.registerExternalVariable("chat", "rules", {type="string", length=4024, fancy=true}, true, {"As regras do seu chat", "The rules of your chat"}, "Rules")
+		pubsub.registerExternalVariable("chat", "rulesPvt", {type="boolean"}, true, {"Mostrar regras em privado ao usar /rules", "Show rules on private when using /rules"}, "Rules")
 	end
 end
 

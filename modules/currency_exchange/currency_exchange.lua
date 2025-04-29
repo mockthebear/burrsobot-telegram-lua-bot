@@ -235,24 +235,15 @@ function module.onTextReceive(msg)
 		  			
 		  			local importing = "\n\n<i>Calculo de para caso de importação: (considerando frete já incluso no valor).</i>\n"
 
-
-
 		  			local fees = 0
 		  			local feeCount = 0
 					local emReais = amount*conv 
 					local imposto = 0
-		  			if amount > 50 then  
-		  				
 		  				fees = 0.6
-		  				local offAmount = 50 * conv
-		  				imposto = (offAmount * 0.2) + (emReais - offAmount) * fees
-		  				importing= importing.."\n🚨Por passar de 50 doláres a taxa é de 50 dolares com 20% ("..string.format("%2.2f", offAmount):gsub("%.", ",").."R$) e o restante com 60% (60% em cima de "..string.format("%2.2f", emReais - offAmount):gsub("%.", ",").."R$)\n📊"
+		  				imposto = emReais * fees
+		  				importing= importing.."O correio calcula a taxa sem IOF, valor: <b>"..string.format("%2.2f", emReais ):gsub("%.", ",").."</b>R$\n🚨A taxa é de 60% "..string.format("%2.2f", imposto ):gsub("%.", ",").."R$"
 
-		  			else
-		  				importing = importing.."\n✅Por ser abaixo de 50 dolares, a taxa do ICMS é de 20%."
-		  				fees = 0.2
-		  				imposto = amount * fees
-		  			end
+
 
 		  			local icmsBase = 0.17
 		  			local baseDeCalculo = (emReais + imposto) / ( 1 - icmsBase )
@@ -433,7 +424,7 @@ function module.onTextReceive(msg)
 		        return true
 		    end
 		    if msg.text:lower():match("burrbot "..module.raw.."$")  then
-				local res = module.doCalcText(msg.text:match("burrbot "..module.raw.."$"))
+				local res = module.doCalcText(msg.text:lower():match("burrbot "..module.raw.."$"))
 				reply.html(res)
 				return true
 			end

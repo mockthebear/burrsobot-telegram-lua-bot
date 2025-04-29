@@ -8,6 +8,10 @@ function OnCommand(msg, text, args)
 		say("Unknow user.")
 		return
 	end
+	if users[tgt.id].isSafe then  
+		say("User is safe. isSafe=true")
+		return
+	end
 	users[tgt.id].noraid_banned = (not users[tgt.id].noraid_banned) and true or false
 	say.html("User "..formatUserHtml(tgt).." is banned as "..tostring(users[tgt.id].noraid_banned) )
 	noraid.save()

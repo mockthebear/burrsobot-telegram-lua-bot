@@ -322,7 +322,7 @@ function isRussianBot(name)
 end
 
 function selectUsername(msg, format)
-    if msg.username then 
+    if msg.username or msg.first_name then 
         return selectUsername({from=msg}, true)
     end
     if not msg.from then 

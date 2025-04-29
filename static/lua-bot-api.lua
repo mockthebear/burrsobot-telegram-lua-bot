@@ -117,7 +117,7 @@ function run_scheduled()
   end
 
   if schdN > 0 then 
-    print("Total of "..schdN.. " scheduled messages")
+    print(os.date("%x", os.time()).." Total of "..schdN.. " scheduled messages")
     if M.warnScheduled < os.time() then 
       M.warnScheduled = os.time()+10
       E.onScheduleWarning(M.scheduled)
@@ -130,20 +130,33 @@ function makeRequest(method, body_arg, forceHttpConn, disableSchedule)
   local pre = ngx.now()
   local body, boundary = encode(body_arg)
 
-  local connModule = getHttpConnection(true)  
+  local connModule = getHttpConnection(false)  
   --io.write("Calling: "..method)
   local post = ngx.now() - pre
   --io.write(" precall in "..post)
 
-  local res, err,a,c = connModule:request_uri("https://api.telegram.org/bot"..M.token.."/" .. method, {
-      method = "POST",
-      body = body,
-      ssl_verify=false,
-      headers = {
-          ["Content-Type"] =  "multipart/form-data; boundary=" .. boundary,
-          ["Content-Length"] = string.len(body),
-      },
-  })
+
+  local res, err,a,c
+  local sendReq = function()
+    res, err,a,c = connModule:request_uri("https://api.telegram.org/bot"..M.token.."/" .. method, {
+        method = "POST",
+        body = body,
+        ssl_verify=false,
+        headers = {
+            ["Content-Type"] =  "multipart/form-data; boundary=" .. boundary,
+            ["Content-Length"] = string.len(body),
+        },
+    })
+  end
+
+
+  local ok, err2 = pcall(sendReq)
+
+  if not ok then  
+    print("Bad req err: "..tostring(err2))
+    connModule = getHttpConnection(true)  
+    sendReq()
+  end
   
   
 

@@ -39,7 +39,7 @@ function core.save()
 end
 
 function core.loadCommands()
-	addCommand( "privacity"						, MODE_FREE, getModulePath().."/chat/privacity.lua", 2, "core-privacity-desc" )
+	addCommand( "privacy"						, MODE_FREE, getModulePath().."/chat/privacity.lua", 2, "core-privacity-desc" )
 	addCommand( "disable"						, MODE_CHATADMS, getModulePath().."/chat/disable-command.lua", 2, "core-disable-desc" )
 	addCommand( "enable"						, MODE_CHATADMS, getModulePath().."/chat/enable-command.lua", 2, "core-enable-desc" )
 	addCommand( "disableall"					, MODE_CHATADMS, getModulePath().."/chat/disable-all.lua", 2 , "core-disableall-desc"  )
@@ -255,11 +255,57 @@ Informações sobre chats:
 * Qualquer comando usado com o Burrbot em um chat será registrado para fins de depuração e prevenção de abuso.
 * Qualquer chat ao qual o bot seja adicionado será visível para os administradores do bot e pode ser armazenado: Nome, ID, Descrição, Foto de perfil, Contagem de membros e administradores. Além disso e dos comandos, nada mais é armazenado.]]
 	
-	g_locale[LANG_US][""] = ""
-	g_locale[LANG_BR][""] = ""
+
+
+
+	local texta = [[
+🇧🇷 
+
+<code>---------------------------------------</code>
+
+
+<code>---------------------------------------</code>
+
+•  Default language set to %s 🇧🇷 use /lang to change
+
+
+Support: https://t.me/P7OiXemr_Ts5YTBh
+
+🐻 Burrbot V4.0 by @Mockthewah~
+]]
 	
-	g_locale[LANG_US][""] = ""
-	g_locale[LANG_BR][""] = ""
+
+
+	g_locale[LANG_US]["core-bot-added"] = [[🇺🇸 <b>Thanks for adding me on this chat!</b>
+
+To alter any config mine or about the chat you can do it using commands or trought the panel using <b>/panel</b>
+• <i>Any command i have or feature can be individually disabled</i> if you feel there are too much spam or useless. Commands can be disabled using /disable or /disableall
+• If you are after protection features you can check them trought /painel or /security
+• Now if you are after the utilities you can use /commands to check all commands. If you have any questions you use /help (commands)
+
+<b>Reccomended configure bot trought /panel command</b>
+
+Updates: https://t.me/burrso
+Support group: https://t.me/P7OiXemr_Ts5YTBh
+🐻 Burrbot V4.1 by @Mockthewah~
+]]
+	g_locale[LANG_BR]["core-bot-added"] = [[<b>Obrigado por me adicionar nesse chat!</b>
+
+Para alterar quaisquer configs minhas ou do chat você pode faze-lo por comandos ou pelo painel usando <b>/painel</b>
+•  <i>Todos os comandos e features que eu tenho podem ser desligadas individualmente</i> se você achar que é muito spam ou desnecessários. Comandos por exemplo podem ser desabilitados usando /disable ou /disableall.
+•  Se estiver procurando proteção, você pode visualizar pelo /painel ou usando /security
+• Agora se o que você quer é as utilidades basta usar /commands que eu mando a lista completa de comandos. E se tiver alguma duvida, basta usar /help (comando)
+
+
+<b>Recomendado configurar o bot pelo comando /painel</b>
+
+Updates: https://t.me/burrso
+Grupo de suporte: https://t.me/P7OiXemr_Ts5YTBh
+🐻 Burrbot V4.1 by @Mockthewah~
+]]
+	
+	g_locale[LANG_US]["core-open-panel"] = "🎛Open control panel🎛"
+	g_locale[LANG_BR]["core-open-panel"] = "🎛Abrir painel de controle🎛"
 	
 	g_locale[LANG_US][""] = ""
 	g_locale[LANG_BR][""] = ""
@@ -416,6 +462,33 @@ function core.onCallbackQueryReceive(msg)
 			bot.editMessageText(msg.message.chat.id, msg.message.message_id, nil, txt..text, "HTML", nil, kb)
 		end
 		return KILL_EXECUTION
+	elseif msg.data:match("chatlang:(.+)") then
+		local lang = msg.data:match("chatlang:(.+)")
+		local chatid = msg.message.chat.id  
+		deploy_deleteMessage(msg.message.chat.id, msg.message.message_id)
+		deploy_answerCallbackQuery(msg.id, "Ok: "..lang)
+		if chats[chatid] then
+			if lang == 'pt-br' then  
+				chats[chatid].data.lang = LANG_BR
+			else 
+				chats[chatid].data.lang = LANG_US
+			end
+			g_lang = chats[chatid].data.lang
+			
+			local keyb = {}
+			keyb[1] = {}
+			keyb[2] = {}
+			keyb[3] = {}
+
+			keyb[1][1] = {text = tr("core-open-panel"), callback_data = "panel:token" }
+		    keyb[2][1] = {text ="Commands/Comandos", url = "https://telegram.me/burrsobot?start="..chatid.."_commands" }
+		    keyb[3][1] = {text =tr("core-start-addbot-button"), url = "http://t.me/"..g_botname.."?startgroup=start" }
+
+
+			local kb = cjson.encode({inline_keyboard = keyb})
+			bot.sendMessage(chatid, tr("core-bot-added"), "HTML", true, false, nil, kb)
+		end
+		return KILL_EXECUTION
 	elseif msg.data:match("dnt:(.+)") then
 		local kd = msg.data:match("dnt:(.+)")
 		local wat = {
@@ -433,46 +506,26 @@ end
 
 
 
-
-
-
 function core.onNewChat(msg)
 
-	local text = [[
-🇧🇷 <b>Obrigado por me adicionar nesse chat!</b>
 
-Para alterar quaisquer configs minhas ou do chat você pode faze-lo por comandos ou pelo painel usando <b>/painel</b>
-•  <i>Todos os comandos e features que eu tenho podem ser desligadas individualmente</i> se você achar que é muito spam ou desnecessários. Comandos por exemplo podem ser desabilitados usando /disable ou /disableall.
-•  Se estiver procurando proteção, você pode visualizar pelo /painel ou usando /security
-• Agora se o que você quer é as utilidades basta usar /commands que eu mando a lista completa de comandos. E se tiver alguma duvida, basta usar /help (comando)
+	local text = [[Obrigado por adicionar o burrbot 🐻🤖!
+<b>Primeiro, defina a linguagem 👀</b>
 
-<code>---------------------------------------</code>
+Thanks for addind burrbot 🐻🤖!
+<b>First define the language 👀</b>
 
-🇺🇸 <b>Thanks for adding me on this chat!</b>
-
-To alter any config mine or about the chat you can do it using commands or trought the panel using <b>/panel</b>
-• <i>Any command i have or feature can be individually disabled</i> if you feel there are too much spam or useless. Commands can be disabled using /disable or /disableall
-• If you are after protection features you can check them trought /painel or /security
-• Now if you are after the utilities you can use /commands to check all commands. If you have any questions you use /help (commands)
-
-<code>---------------------------------------</code>
-
-•  Default language set to %s 🇧🇷 use /lang to change
-
-
-Support: https://t.me/P7OiXemr_Ts5YTBh
-
-🐻 Burrbot V4.0 by @Mockthewah~
-]]
-	
-
+OwO]]
 	
 	local keyb = {}
 	keyb[1] = {}
 	keyb[2] = {}
 
-	keyb[1][1] = {text = "Bot/chat panel", url = "https://telegram.me/burrsobot?start="..msg.chat.id.."_painel" }
-	keyb[2][1] = {text ="Commands/Comandos", url = "https://telegram.me/burrsobot?start="..msg.chat.id.."_commands" }
+	keyb[1][1] = {text = tr("PT-BR 🇧🇷"), callback_data = "chatlang:pt-br" }
+    keyb[2][1] = {text = tr("English 🇺🇸"), callback_data = "chatlang:en" }
+
+	--keyb[1][1] = {text = "Bot/chat panel", url = "https://telegram.me/burrsobot?start="..msg.chat.id.."_painel" }
+	--keyb[2][1] = {text ="Commands/Comandos", url = "https://telegram.me/burrsobot?start="..msg.chat.id.."_commands" }
 	local kb = cjson.encode({inline_keyboard = keyb})
 	
 	bot.sendMessage(msg.chat.id, text:format(g_locale.langs[chats[msg.chat.id].lang]), "HTML", true, false, nil, kb)

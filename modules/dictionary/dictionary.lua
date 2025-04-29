@@ -194,7 +194,7 @@ function module.getDefinition(word)
         return nil, -1, nil
     end
 
-    local wut = dat:match("<p itemprop=\"description\" class=\"significado textonovo\">(.-)</p>")    
+    local wut = dat:match("<p class=\"significado textonovo\">(.-)</p>")    
     if not wut then 
     	return false, 0, nil
     end

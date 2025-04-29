@@ -50,15 +50,18 @@ function loadAuxiliarLibs(reload)
 			local success, val = pcall(dofile, path)
 			if not success then 
 				print("\nError loading "..path..": "..val)
+				io.read()
 				return
 			end
 
 			if not val or type(val) ~= "table" then 
 				print("\nError loading "..path.." failed to dofile... Maybe missing a return?")
+				io.read()
 				return
 			end
 			if not val.load then 
 				print("\nError loading "..path..": missing load function")
+				io.read()
 				return
 			end
 

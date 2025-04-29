@@ -19,5 +19,8 @@ function OnCommand(msg, text, args)
 		end
 		str = str .. "\n----------------------------"
 	end
-	bot.sendMessage(g_chatid,str, "HTML" ,true,false,g_msg.message_id)
+	local sent = bot.sendMessage(g_chatid,str, "HTML" ,true,false,g_msg.message_id)
+	if not sent or not sent.okj then 
+		say.big(cjson.encode(m))
+	end
 end

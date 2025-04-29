@@ -111,6 +111,7 @@ function joinlock.onCallbackQueryReceive(msg)
 			local id, chat = msg.data:match("joinlock:release:(%d+):([%d%-]+)")
 			chat = tonumber(chat)
 			id = tonumber(id)
+			checkCacheChatAdminsById(chat)
 			if chats[chat] and isUserChatAdmin(chat, msg.from.id) or isUserBotAdmin(msg.from.id)  then
 				deploy_answerCallbackQuery(msg.id, "Released~", "true")
 				
@@ -144,6 +145,7 @@ function joinlock.onCallbackQueryReceive(msg)
 			local id, chat = msg.data:match("joinlock:ban:(%d+):([%d%-]+)")
 			chat = tonumber(chat)
 			id = tonumber(id)
+			checkCacheChatAdminsById(chat)
 			if chats[chat] and isUserChatAdmin(chat, msg.from.id) or isUserBotAdmin(msg.from.id)  then
 				deploy_deleteMessage(chat, msg.message.message_id)
 				deploy_answerCallbackQuery(msg.id, "BANNED!", "true")

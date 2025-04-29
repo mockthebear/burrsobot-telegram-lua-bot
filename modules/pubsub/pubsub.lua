@@ -26,6 +26,10 @@ function pubsub.registerExternalVariable(location, varname, allowed, allowWrite,
 		if type(allowed) ~= "table" then 
 		--	error("Type of allowed is wrong: "..type(allowed).." expected a table")
 		end
+
+		if type(description) ~= "table" then 
+			description = {description}
+		end
 		pubsub.allowed[location][moduleName][varname] = {
 			accept = allowed,
 			write=allowWrite,
@@ -84,17 +88,18 @@ function pubsub.ready()
 	--pubsub.registerExternalVariable("chat", "memes", {type="tuple", valid={ head="*", tail={"Ban", "Kick", "Delete", "Mute 60s", "Mute 10 min", "Mute 1h"} }}, true, "Sussy baka", "SUS")
 
 
-	pubsub.registerExternalVariable("chat", "disabledc", {type="list_boolean_not", valid=values}, true, "Enabled commands", "Commands", {["ON"]= "Disabled", ["OFF"] = "Enabled", [".head"] = "/"}, function(chatid)
-		if chats[chatid] then
-			chats[chatid].data.changedCommand = true
-			return true
-		end
-		return false
-	end)
-	pubsub.registerExternalVariable("chat", "custom_cooldown", {type="list_number", fields=cdvalues}, true, "Command Cooldown", "Cooldown", {[".head"] = "/"})
-	pubsub.registerExternalVariable("chat", "global_cooldown", {type="number",  default=1}, true, "Global command cooldown", "Cooldown")
-	pubsub.registerExternalVariable("chat", "cooldown_ignore_admins", {type="boolean",  default=false}, true, "Admins have no cooldown", "Cooldown")
-	g_redis:del("default:accepted")
+	pubsub.registerExternalVariable("chat", "disabledc", {type="list_boolean_not", valid=values}, true, {"Comandos habilitados", "Enabled commands"}, "Commands", {["ON"]= "Disabled", ["OFF"] = "Enabled", [".head"] = "/"}, function(chatid)
+	if chats[chatid] then
+		chats[chatid].data.changedCommand = true
+		return true
+	end
+	return false
+end)
+
+pubsub.registerExternalVariable("chat", "custom_cooldown", {type="list_number", fields=cdvalues}, true, {"Tempo de espera personalizado", "Command Cooldown"}, "Cooldown", {[".head"] = "/"})
+pubsub.registerExternalVariable("chat", "global_cooldown", {type="number",  default=1}, true, {"Tempo de espera global de comandos", "Global command cooldown"}, "Cooldown")
+pubsub.registerExternalVariable("chat", "cooldown_ignore_admins", {type="boolean",  default=false}, true, {"Admins não têm tempo de espera", "Admins have no cooldown"}, "Cooldown")
+g_redis:del("default:accepted")
 	g_redis:set("default:accepted", cjson.encode(pubsub.allowed))
 end
 
@@ -117,18 +122,25 @@ function pubsub.onCallbackQueryReceive(msg)
 			    local tok = pubsub.generateChatToken(msg.message.chat.id, msg.from.id, msg.from.first_name)
 
 			    local keyb = {}	
-				local JSON = require("JSON")
+
 				keyb[1] = {}
 				keyb[2] = {}
 				keyb[1][1] = { text = "Open panel", selective=true, web_app = {url=tok}} 
 				keyb[2][1] = { text = "Open in browser", url=tok} 
 
-				local kb2 = JSON:encode({inline_keyboard = keyb })
+				local kb2 = cjson.encode({inline_keyboard = keyb })
 
 				local res = bot.sendMessage(msg.from.id, "Panel to chat "..msg.message.chat.title, "HTML", true, false, msg.message_id, kb2)
 				if not res.ok then 
 				  reply(Dump(res))
+				else
+					scheduleEvent(60 * 10, function()
+						bot.deleteMessage(msg.from.id, res.result.message_id)
+					end) 
 				end
+
+
+				
 
 				--bot.sendMessage(msg.from.id, "Access link: "..tok, "HTML")
 				--say.admin("Painel open for: "..msg.message.chat.title)
@@ -140,6 +152,13 @@ function pubsub.onCallbackQueryReceive(msg)
 		end
 	end
 end
+function pubsub.descriptionByLang(desc, chatid)
+	local lang = chats[chatid].data.lang
+	lang = lang or 1
+
+	return desc[lang] or desc[1]
+end
+
 function pubsub.frame()
 	res, err = pubsub.redisSubscribe:read_reply()
     if not res then
@@ -191,7 +210,7 @@ function pubsub.frame()
 
 	    					if notify == "on" or notify == "true" then
 
-		    					local stat = bot.sendMessage(chatid, "Altered <b>"..restriction.description.."</b> by "..formatUserHtml({id=message.fromid, first_name=message.fromname}).." to:\n\n"
+		    					local stat = bot.sendMessage(chatid, "Altered <b>"..pubsub.descriptionByLang(restriction.description, chatid).."</b> by "..formatUserHtml({id=message.fromid, first_name=message.fromname}).." to:\n\n"
 		    						..pubsub.formatAlias( ".head", restriction, true )..index.." -> "..pubsub.formatOutput(val, restriction), "HTML")
 		    					if stat.ok then
 		    						pubsub.replyMessageId(messageid, "OK")
@@ -210,7 +229,7 @@ function pubsub.frame()
 	    					chats[chatid].data[key][index] = val
 
 	    					if notify == "on" or notify == "true" then
-		    					local stat = bot.sendMessage(chatid, "Altered <b>"..restriction.description.."</b> by "..formatUserHtml({id=message.fromid, first_name=message.fromname}).." to:\n\n"
+		    					local stat = bot.sendMessage(chatid, "Altered <b>"..pubsub.descriptionByLang(restriction.description, chatid).."</b> by "..formatUserHtml({id=message.fromid, first_name=message.fromname}).." to:\n\n"
 		    						..pubsub.formatAlias( ".head", restriction, true )..index.." -> "..pubsub.formatOutput(val, restriction), "HTML")
 		    					if stat.ok then
 		    						pubsub.replyMessageId(messageid, "OK")
@@ -225,7 +244,7 @@ function pubsub.frame()
 	    					local oldVal = chats[chatid].data[key]
 	    					chats[chatid].data[key] = val
 	    					if notify == "on" or notify == "true" then
-	    						local stat = bot.sendMessage(chatid, "Altered <b>"..restriction.description.."</b> by "..formatUserHtml({id=message.fromid, first_name=message.fromname}).." to:\n\n"..pubsub.formatAlias( ".head", restriction, true )..pubsub.formatOutput(val, restriction), "HTML")
+	    						local stat = bot.sendMessage(chatid, "Altered <b>"..pubsub.descriptionByLang(restriction.description, chatid).."</b> by "..formatUserHtml({id=message.fromid, first_name=message.fromname}).." to:\n\n"..pubsub.formatAlias( ".head", restriction, true )..pubsub.formatOutput(val, restriction), "HTML")
 		    					if stat.ok then
 		    						pubsub.replyMessageId(messageid, "OK")
 		    					else 
@@ -283,7 +302,16 @@ function pubsub.isWithinRestriction(restriction, value, index)
 		return type(value) == "boolean", "expected boolean got "..type(value)
 	end
 	if (restriction.type == "number") then 
-		return type(tonumber(value)) == "number", "expected number got "..type(value)
+		if not type(tonumber(value)) == "number" then 
+			return false, "expected number got "..type(value)
+		end
+		if restriction.max and restriction.max < tonumber(value) then
+			return false, "maximum valeue is "..restriction.max
+		end 
+		if restriction.min and restriction.min > tonumber(value) then
+			return false, "minimum valeue is "..restriction.min
+		end 
+		return true, 'none'
 	end
 
 	if (restriction.type == "string") then 

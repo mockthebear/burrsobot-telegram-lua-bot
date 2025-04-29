@@ -9,8 +9,7 @@ function OnCommand(msg, text, args, targetChat)
 			keyb[1] = {}
 			keyb[1][1] = {text = "Portugues 🇧🇷", callback_data = "start:br" }
 			keyb[1][2] = {text = "English 🇺🇸", callback_data = "start:us" }
-			local JSON = require("JSON")
-			local kb = JSON:encode({inline_keyboard = keyb})
+			local kb = cjson.encode({inline_keyboard = keyb})
 			bot.sendMessage(msg.chat.id, "*Authorized!!!*\n.\n.\n.\n.\n.\nIf you want to start using me...\nBefore that... Wich language do you use?\n\n*Oi, antes de começar, qual lingua você usa?*", "Markdown", true, false, nil, kb)
 		end
 		return
@@ -51,8 +50,7 @@ function OnCommand(msg, text, args, targetChat)
 		local keyb = {}
 		keyb[1] = {}
 		keyb[1][1] = { text = tr("Autorizar o bot mandar private"), url = "https://telegram.me/burrsobot?start="..g_chatid.."_notifyme"} 
-		local JSON = require("JSON")
-		kb = JSON:encode({inline_keyboard = keyb })
+		kb = cjson.encode({inline_keyboard = keyb })
 		str = str .. tr("\nParece que você não autorizou ainda eu mandar privates pra você. Basta ir no private comigo e dar /start ou clicar no botão abaixo\n")
 	end
 	

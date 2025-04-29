@@ -17,7 +17,7 @@ function OnCommand(msg, text, args)
 		elseif args[2]:find("pget") then 
 			reply(tr("Enviando log"))
 			local ret = bot.sendDocument(msg.from.id, "logs/"..msg.chat.id..".txt", chats[g_chatid].title.." Log!")
-			if not ret.ok then 
+			if not ret or not ret.ok then 
 				reply_parallel(ret.description.."\nMaybe you have to go one time in private with me?")
 			end
 		else 

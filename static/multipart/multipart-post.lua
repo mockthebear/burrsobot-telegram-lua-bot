@@ -24,7 +24,7 @@ local append_data = function(r, k, data, extra)
     )
   end
   tprintf(r, "\r\n\r\n")
-  tprintf(r, data)
+  tprintf(r, tostring(data))
   tprintf(r, "\r\n")
 end
 
@@ -44,6 +44,8 @@ local encode = function(t, boundary)
     _t = type(v)
     if _t == "string" then
       append_data(r, k, v, {})
+    elseif _t == "boolean" then
+      append_data(r, k, v, {})
     elseif _t == "table" then
       --assert(v.data, "invalid input")
       local extra = {
@@ -55,7 +57,7 @@ local encode = function(t, boundary)
       append_data(r, k, v.data, extra)
     elseif _t == "number" then
       append_data(r, k, v, {})
-    else error(string.format("unexpected type %s", _t)) end
+    else error(string.format("unexpected type %s = %s", _t, tostring(v)..' - '..tostring(k))) end
   end
   tprintf(r, "--%s--\r\n", boundary)
   return table.concat(r), boundary

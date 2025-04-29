@@ -29,7 +29,7 @@ function getTargetUser(msg, needTarget, global)
             end
         end
     else 
-        if msg.reply_to_message and msg.reply_to_message.from and msg.reply_to_message.from  ~= "burrsobot"  then 
+        if msg.reply_to_message and msg.reply_to_message.from and msg.reply_to_message.from  ~= "burrsobot" and not msg.reply_to_message.is_topic_message  then 
             --Load user
             getUserById(msg.reply_to_message.from.id)
             return msg.reply_to_message.from

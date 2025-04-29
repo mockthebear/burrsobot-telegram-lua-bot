@@ -6,9 +6,9 @@ local welcome = {
 --[ONCE] runs when the load is finished
 function welcome.load()
 	if pubsub then
-		pubsub.registerExternalVariable("chat", "welcome", {type="string", lenght=4024}, true, "Welcome message", "Welcoming")
-		pubsub.registerExternalVariable("chat", "disable_welcome", {type="boolean"}, true, "Disable welcome messages", "Welcoming")
-		pubsub.registerExternalVariable("chat", "delete_welcome", {type="boolean"}, true, "Auto delete welcome messages after 2 minutes", "Welcoming")
+		pubsub.registerExternalVariable("chat", "welcome", {type="string", length=4024}, true, {"Mensagem de boas-vindas", "Welcome message"}, "Welcoming")
+		pubsub.registerExternalVariable("chat", "disable_welcome", {type="boolean"}, true, {"Desabilitar mensagens de boas-vindas", "Disable welcome messages"}, "Welcoming")
+		pubsub.registerExternalVariable("chat", "delete_welcome", {type="boolean"}, true, {"Excluir automaticamente mensagens de boas-vindas após 2 minutos", "Auto delete welcome messages after 2 minutes"}, "Welcoming")
 	end
 end
 
@@ -181,9 +181,11 @@ function welcome.sendWelcomeMessage(msg, kb, append)
 end
 
 function welcome.onNewChatParticipant(msg)
+	print("New chat member!" ..tostring(msg.from.id)..' = '..tostring(g_id))
 	if msg.from.id ~= g_id then
 		if not chats[msg.chat.id].data.disable_welcome then
-			welcome.sendWelcomeMessage(msg)
+			local res = welcome.sendWelcomeMessage(msg)
+			print("Welcome msg on "..chats[msg.chat.id].title.." is "..cjson.encode(res))
 		end
 	end
 end
