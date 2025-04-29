@@ -125,8 +125,8 @@ end
 
 function birthday.loadTranslation()
 
-	g_locale[LANG_US]["bd-desc"] = "Announces someones birthday. Use like /bd @username or replying ot a user message. This will change the profile picture of the chat and pin a message. Changes are undone at midnight"
-	g_locale[LANG_BR]["bd-desc"] = "Anuncia o aniver'sario de alguem. Use assim: /bd @username ou respondendo a mensagem de alguem. Isso vai mudar a foto do grupo e vai fixar uma mensagem. As mudanças serão desfeitas meia noite."
+	g_locale[LANG_US]["bd-desc"] = "Announces someone's birthday. Use /bd @username or replying to a user's message. This will change the profile picture of the groupchat and pin a message. Changes are undone at midnight."
+	g_locale[LANG_BR]["bd-desc"] = "Anuncia o aniversário de alguém. Use /bd @username ou respondendo a mensagem de alguém. Isso vai mudar a foto do grupo e fixará uma mensagem. As mudanças serão desfeitas na meia noite."
 
 	g_locale[LANG_US]["bd-r-desc"] = "Undo what /bd does"
 	g_locale[LANG_BR]["bd-r-desc"] = "Desfaz o /bd"
@@ -138,17 +138,17 @@ function birthday.loadTranslation()
 	g_locale[LANG_BR]["bd-reverted-auto"] = "Revertido o BD automaticamente"
 
 
-	g_locale[LANG_US]["bd-failed-user-photo"] = "Failed to get user photo"
-	g_locale[LANG_BR]["bd-failed-user-photo"] = "Falha ao baixar foto do usuário"
+	g_locale[LANG_US]["bd-failed-user-photo"] = "Failed to get user's photo"
+	g_locale[LANG_BR]["bd-failed-user-photo"] = "Falha ao baixar a foto do usuário"
 
-	g_locale[LANG_US]["bd-failed-user"] = "Não encontrei o usuário"
+	g_locale[LANG_US]["bd-failed-user"] = "User not found"
 	g_locale[LANG_BR]["bd-failed-user"] = "Não encontrei o usuário"
 
-	g_locale[LANG_US]["bd-bd"] = "OH MY GOSH ITS %s's birthday!!!!!"
-	g_locale[LANG_BR]["bd-bd"] = "AI MEU DESU É ANIVERSÁRIO DE %s"
+	g_locale[LANG_US]["bd-bd"] = "OH MY GOSH ITS %s's BIRTHDAY!!!!!"
+	g_locale[LANG_BR]["bd-bd"] = "AI MEU DESU É O ANIVERSÁRIO DE %s"
 
-	g_locale[LANG_US]["bd-nophoto"] = "Cannot access user profile pic. He or her need to send a /start on private with me. Sorry its telegram rules."
-	g_locale[LANG_BR]["bd-nophoto"] = "Não foi possivel acessar foto do usuário, ele precisa ir no privado e dar /start comigo. Desculpa, o telegram é assim"
+	g_locale[LANG_US]["bd-nophoto"] = "Cannot access the user's profile picture. They need to send a /start on private with me. Sorry it is telegram's rules."
+	g_locale[LANG_BR]["bd-nophoto"] = "Não foi possivel acessar a foto de perfil do usuário, ele(a) precisa ir no privado e dar /start comigo. Desculpa, o telegram é assim."
 end
 
 
