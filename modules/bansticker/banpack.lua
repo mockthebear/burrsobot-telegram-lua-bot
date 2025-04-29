@@ -1,6 +1,6 @@
 function OnCommand(user, msg, args)
     if not user.chat.id or not chats[user.chat.id] then 
-        deploy_sendMessage(g_chatid,"This only owrks on chats")
+        deploy_sendMessage(g_chatid,"This command is for groupchats only")
         return
     end
     if args[2] == "msg" then 
@@ -56,13 +56,13 @@ function OnCommand(user, msg, args)
                 
             end
         else 
-            say(tr("Use isso respondendo em um sticker."))
+            say(tr("Use isso respondendo à um sticker."))
  
 
             return
         end
     else 
-        say(tr("Responda a um sticker usando /bansticker para banir o sticker ou /bansticker pack para banir o pack inteiro.\nOu /bansticker msg \"Nao pode aqui\", para setar uma mensagem ao deletar o sticker.\n/bansticker clear, para limpar tudo"))
+        say(tr("Responda à um sticker usando /bansticker para banir o sticker ou /bansticker pack para banir o pack inteiro.\nOu /bansticker msg \"Nao pode aqui\", para setar uma mensagem ao deletar o sticker.\n/bansticker clear, para limpar tudo"))
         if chats[user.chat.id].data.banpack then 
             local ret = ""
             ret = ret .. "Packs banidos: \n"
