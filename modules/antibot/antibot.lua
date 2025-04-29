@@ -743,15 +743,15 @@ end
 
 function antibot.loadTranslation()
 	g_locale[LANG_BR]["antibot-enter-message"] = 'Olá %s. Por conta de %s eu preciso que você prove que você não é um bot.\n\n<b>Você tem 2 minutos para apertar o botão se não será banido automaticamente.</b>\nBasta apertar no botão que vai encaminhar para o bot, e dar start.'
-	g_locale[LANG_US]["antibot-enter-message"] = 'Hello %s. Due %s i need you to prove that you\'re not a bot.\n\n<b>You have two minutes to prove, otherwise you will be banned.</b>\nJust press the button bellow and start the bot.'
+	g_locale[LANG_US]["antibot-enter-message"] = 'Hello %s. Due to %s I need you to prove that you\'re not a bot.\n\n<b>You have 2 minutes to prove, otherwise you will be banned.</b>\nJust press the button below and start the bot.'
 
 
 	g_locale[LANG_BR]["antibot-notabot"] = "Não sou um bot"
-	g_locale[LANG_US]["antibot-notabot"] = "Im not a bot"
+	g_locale[LANG_US]["antibot-notabot"] = "I'm not a bot"
 
 
-	g_locale[LANG_BR]["antibot-public"] = "Olá %s. Para continuat no chat, preciso que você digite os números acima. Você tem 2 minutos para fazer isso, se não será banido do grupo."
-	g_locale[LANG_US]["antibot-public"] = "Hello %s. To stay in the chat i need you tp type the numbers above. You have two minutes to do, otherwise you will be banned."
+	g_locale[LANG_BR]["antibot-public"] = "Olá %s. Para continuar no chat, preciso que você digite os números acima. Você tem 2 minutos para fazer isso, se não será banido do grupo."
+	g_locale[LANG_US]["antibot-public"] = "Hello %s. To stay in the chat, I need you to type the numbers above. You have two minutes to do so, otherwise you will be banned."
 
 
 	g_locale[LANG_BR]["antibot-reason"] = "Regras do chat"
@@ -764,50 +764,50 @@ function antibot.loadTranslation()
 	g_locale[LANG_BR]["antibot-notapprove"] = "(Admin only) Banir"
 	g_locale[LANG_US]["antibot-notapprove"] = "(Admin only) Ban"
 
-	g_locale[LANG_BR]["antibot-start-desc"] = "You know that bots that joins and dont say a word? Users without profile picture and two letter names that sometimes just announce some shit? So, i can help handle that problem. Activating the bot protection using /panel or /botprotection and igving permissions i can check if they are real users or bots and get rid of them!"
-	g_locale[LANG_US]["antibot-start-desc"] = "Sabe aqueles bot que entram e não falam nada? Usuários com nomes de duas letras sem fotos, ou que só entram e anunciam alguma coisa? Pois é, eu consigo amenizar esse problema. Ativando a proteção de bots pelo /painel ou pelo /botprotection, e me dando admin do chat, eu verifico se são bots mesmo, e se forem, eu os kicko!"
+	g_locale[LANG_BR]["antibot-start-desc"] = "Sabe aqueles bots que entram e não falam nada? Usuários com nomes de duas letras sem fotos, ou que só entram e anunciam alguma coisa? Pois é, eu consigo amenizar esse problema. Ativando a proteção de bots pelo /painel ou pelo /botprotection, e me dando admin do chat, eu verifico se são bots mesmo, e se forem, eu os kicko!"
+	g_locale[LANG_US]["antibot-start-desc"] = "You know those bots that joins and dont say a word? Users without profile picture and two letter names that sometimes just announce some shit? So, I can help you handle that problem. Activating the bot protection using /panel or /botprotection and giving me admin permissions, I can check if they are real users or bots and get rid of them!"
 
 
 	g_locale[LANG_BR]["antibot-pvt-notify"] = "\n\n✅Usuário avisado pelo privado✅"
-	g_locale[LANG_US]["antibot-pvt-notify"] = "\n\n✅User were notified by private message✅"
+	g_locale[LANG_US]["antibot-pvt-notify"] = "\n\n✅User notified by DMs✅"
 
-	g_locale[LANG_BR]["antibot-pvt-message"] = "Você acabou de entrar no chat <b>%s</b>, e a proteção anti bot está ativa. Você tem 2 minutos para provar que não é um bot, se não será removido do chat automaticamente.\n\nAperte o botão abaixo"
-	g_locale[LANG_US]["antibot-pvt-message"] = "You just joined the <b>%s</b>, and the bot protection were triggered. You have two minutes to check there or otherwise will be banned.\n\nPress this button and do an start command."
+	g_locale[LANG_BR]["antibot-pvt-message"] = "Você acabou de entrar no grupo <b>%s</b>, e a proteção anti-bot está ativa. Você tem 2 minutos para provar que você não é um bot, se não será removido do chat automaticamente.\n\nAperte o botão abaixo"
+	g_locale[LANG_US]["antibot-pvt-message"] = "You just joined the <b>%s</b> group, and the anti-bot protection is active. You have 2 minutes to prove that you are not a bot, otherwise you will be banned.\n\nPress the button below."
 
-	g_locale[LANG_BR]["antibot-released"] = "Obrigado, você se confirmou como não bot, e suas restrições foram removidas."
-	g_locale[LANG_US]["antibot-released"] = "Thanks! You confirmed as not a bot, your restrictions were removed."
-
-
-	g_locale[LANG_BR]["antibot-ban"] = 'Usuário %s foi kickado por falhar em provar que não é um bot.'
-	g_locale[LANG_US]["antibot-ban"] = 'User %s banned for failing to prove its not a bot.\n<b>BEGONE BOT</b>'
+	g_locale[LANG_BR]["antibot-released"] = "Obrigado, você confirmou que você não é um bot, suas restrições foram removidas."
+	g_locale[LANG_US]["antibot-released"] = "Thanks! You confirmed that you aren't, your restrictions were removed."
 
 
-	g_locale[LANG_BR]["antibot-first-document"] = "primeira mensagem no chat ser um arquivo"
-	g_locale[LANG_US]["antibot-first-document"] = "first message contains a file"
-
-	g_locale[LANG_BR]["antibot-first-photo"] = "primeira mensagem no chat ser uma foto"
-	g_locale[LANG_US]["antibot-first-photo"] = "first message contains a photo"
-
-	g_locale[LANG_BR]["antibot-first-link"] = "primeira mensagem no chat conter link"
-	g_locale[LANG_US]["antibot-first-link"] = "first message contains a link"	
+	g_locale[LANG_BR]["antibot-ban"] = "Usuário %s foi kickado por falhar em provar que não é um bot."
+	g_locale[LANG_US]["antibot-ban"] = "User %s banned for failing to prove that they aren't a bot.\n<b>BEGONE BOT</b>"
 
 
-	g_locale[LANG_BR]["antibot-wrong-combination"] = "Atenção %s, código inválido. Por favor digite os numeros acima.\nTentativa %d/5\n<b>São um total de 6 digitos! talvez você precise abrir a imagem para ver o resto!</b>"
-	g_locale[LANG_US]["antibot-wrong-combination"] = "Attention %s, invalid captcha. Please type the numbers above.\nTry %d/5\n<b>There are a total of 6 digits! You may need to click on the image to see the others</b>"	
+	g_locale[LANG_BR]["antibot-first-document"] = "Primeira mensagem no chat ser um arquivo"
+	g_locale[LANG_US]["antibot-first-document"] = "First message contains a file"
+
+	g_locale[LANG_BR]["antibot-first-photo"] = "Primeira mensagem no chat ser uma foto"
+	g_locale[LANG_US]["antibot-first-photo"] = "First message contains a photo"
+
+	g_locale[LANG_BR]["antibot-first-link"] = "Primeira mensagem no chat conter link"
+	g_locale[LANG_US]["antibot-first-link"] = "First message contains a link"	
+
+
+	g_locale[LANG_BR]["antibot-wrong-combination"] = "Atenção %s, código inválido. Por favor digite os numeros acima.\nTentativa %d/5\n<b>São um total de 6 digitos! Certifique-se de abrir a imagem para ver ela por inteira!</b>"
+	g_locale[LANG_US]["antibot-wrong-combination"] = "Attention %s, invalid captcha. Please type the numbers above.\nAttempt %d/5\n<b>There are a total of 6 digits! Make sure to click on the image to see it in full!</b>"	
 
 
 	g_locale[LANG_BR]["antibot-nolinks"] = "Usuário %s não tem permissão para enviar links aqui ainda. Eu vou deletar todos os links até a limitação de %s segundos."
-	g_locale[LANG_US]["antibot-nolinks"] = "User %s you dont have the right to send links here yet. Im deleting every link until the limitation of %s seconds."
+	g_locale[LANG_US]["antibot-nolinks"] = "User %s you dont have the right to send links here yet. I'm deleting every link until the limitation of %s seconds."
 
 	g_locale[LANG_BR]["antibot-unban"] = 'Usuário %s foi desbanido e desmarcado como bot.'
-	g_locale[LANG_US]["antibot-unban"] = 'User %s was unbanned and unmarked as a bot. He is allowed to join again.'
+	g_locale[LANG_US]["antibot-unban"] = 'User %s was unbanned and unmarked as a bot. They are allowed to join again.'
 
-	g_locale[LANG_BR]["antibot-desc"] = "Quando um user novo entrar:\n- Se ele estiver sem username\n- Sem foto de perfil\n- Na blacklist\n- Sua primeira mensagem for uma midia\n- Sua primeira mensagem for um link\nO bot vai automaticamente apagar a mensagem dele\nO usuario será restrito de postar qualquer coisa no chat e um contador de 2 minutos inicia.\nO usuario terá que apertar um botão para provar que não é um bot de anuncio.\nQuando ele apertar o bloqueio sai e ele não é kickado.\n\nPara ligar isso, coloque o bot como admin ou com permissão de kickar e de restringir e deletar mensagens, use o comando /botprotection e pronto!"
-	g_locale[LANG_US]["antibot-desc"] = 'When a new user joins:\n- without profile pic\n- without username\n- on the blocklist\n- his first message contain media or link\nThe bot will lock this user and send him a button. If he dont presses it within 2 minutes he will be kicked.'
+	g_locale[LANG_BR]["antibot-desc"] = "Quando um user novo entrar:\n- Se ele estiver sem username\n- Sem foto de perfil\n- Na blacklist\n- Sua primeira mensagem for um arquivo de mídia\n- Sua primeira mensagem for um link\nO bot vai automaticamente apagar a mensagem do usuário\nO usuario será restringido de postar qualquer coisa no chat e um contador de 2 minutos inicia.\nO usuario terá que apertar um botão para provar que não é um bot.\nQuando o usuário apertar o botão, o bloqueio sai e ele não é kickado.\n\nPara ligar isso, coloque o bot como admin e com permissões de <b>Banir usuários</b> e <b>Apagar Mensagens</b>, use o comando /botprotection e pronto!"
+	g_locale[LANG_US]["antibot-desc"] = "When a new user joins that:\n- Doesn't have a profile picture\n- Doesn't have a username\n- Is on the blocklist\n- Their first message has a media\n- Their first message has a link\nThe bot will lock this user and send them a button. If they don't presses it within 2 minutes they will be kicked."
 
 
-	g_locale[LANG_BR]["antibot-said-nothing-warn"] = "Attention %s, you joined and said nothing. You will be kicked in 1 minute."
-	g_locale[LANG_US]["antibot-said-nothing-warn"] = "Atenção %s, você entrou porem não disse nada ainda. Você será removido do grupo em 1 minuto."
+	g_locale[LANG_BR]["antibot-said-nothing-warn"] = "Atenção %s! Você entrou, porém ainda não disse nada. Você será removido do grupo em 1 minuto."
+	g_locale[LANG_US]["antibot-said-nothing-warn"] = "Attention %s! You joined, but said nothing yet. You will be kicked in 1 minute."
 	
 end
 
