@@ -1,6 +1,6 @@
 function OnCommand(msg, aaa, args)
 	if not chats[msg.chat.id] then 
-		say("This only works on chats")
+		say("This command is for groupchats only")
 		return
 	end
 
@@ -20,7 +20,7 @@ function OnCommand(msg, aaa, args)
 	if cm.ok then 
 		antibot.forceBotCheck(msg, tr("ordens do adm"))
 	else 
-		say.parallel("Cant find userid "..lid)
+		say.parallel("Cant find userid"..lid)
 		return 
 	end
 end
