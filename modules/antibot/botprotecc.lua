@@ -1,6 +1,6 @@
 function OnCommand(user, msg, args)
 	if not chats[user.chat.id] then 
-		say("This only works on chats")
+		say("This command is for groupchats only")
 		return
 	end
 	local old
