@@ -1,6 +1,6 @@
 function OnCommand(msg, text, args)
 	if not chats[msg.chat.id] then 
-		reply_parallel("Sorry, this command is for chats only")
+		reply_parallel("This command is for groupchats only")
 		return
 	end
 
@@ -26,7 +26,7 @@ function OnCommand(msg, text, args)
 		
 		reply_markdown(per)
 		if not ret.result.can_delete_messages or not ret.result.can_restrict_members then
-			say("Cannot fully activate direct media system because i dont have enought permissions. I need to be able to restrict and delete messages. Can use to check permitions /permitions")
+			say("Cannot fully activate direct media system because I dont have enought permissions. I need to be able to restrict and delete messages. Can use to check permitions /permitions")
 		else
 			say("Fully working now.")
 		end
